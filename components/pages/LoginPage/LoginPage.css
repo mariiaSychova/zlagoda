@@ -1,0 +1,44 @@
+.login-container {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+
+    background: antiquewhite;
+
+    padding: 24px;
+}
+
+input {
+    width: 100%;
+    max-width: 576px;
+
+    padding: 12px;
+    border: 1px solid gray;
+    border-radius: 6px;
+}
+
+.error {
+    color: red;
+}
+
+.submit {
+    width: 100%;
+    max-width: 576px;
+
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    background: greenyellow;
+
+    &:hover {
+        box-shadow: 5px 5px 20px gray;
+    }
+}

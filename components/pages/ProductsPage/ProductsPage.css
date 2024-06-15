@@ -1,0 +1,37 @@
+.categories {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.title {
+    padding-left: 12px;
+    margin-bottom: 6px;
+}
+
+.category {
+    width: 100%;
+    padding: 6px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+
+    border: 1px dashed lightgray;
+    border-radius: 4px;
+
+    &:hover,
+    &.selected {
+        background: lightgray;
+        border: 1px solid gray;
+    }
+}
+
+.product-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}

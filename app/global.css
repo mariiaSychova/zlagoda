@@ -1,0 +1,187 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.page-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.page-inner-container {
+    position: relative;
+    margin-top: 24px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.loading {
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+
+        animation: shimmer 2s linear 0s infinite running forwards;
+        background-image: linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0.25),
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 0.25)
+        );
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1200px 0;
+    }
+    100% {
+        background-position: 1200px 0;
+    }
+}
+
+.page-content {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+}
+
+.page-filters {
+    width: 100%;
+    max-width: 288px;
+    min-width: 288px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.clear-btn,
+.export-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+        box-shadow: 5px 5px 20px gray;
+    }
+}
+
+.clear-btn {
+    background: greenyellow;
+}
+
+.export-btn {
+    background: antiquewhite;
+}
+
+.page-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.item {
+    position: relative;
+    border: 1px solid gray;
+    transition: all 0.3s ease-in-out;
+    border-radius: 6px;
+    padding: 12px;
+    cursor: default;
+
+    &:hover {
+        box-shadow: 5px 5px 20px gray;
+
+        .save-item,
+        .edit-item,
+        .delete-item {
+            opacity: 1;
+            transform: translate(15px, -15px);
+        }
+    }
+}
+
+.item-add {
+    cursor: pointer;
+
+    &::before {
+        content: "+";
+
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+
+        font-size: 48px;
+        color: lightgray;
+    }
+}
+
+.item-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    input,
+    select {
+        width: 100%;
+        padding: 6px 12px;
+        border-radius: 4px;
+        border: 1px solid lightgray;
+    }
+}
+
+.save-item,
+.edit-item,
+.delete-item {
+    width: 30px;
+    height: 30px;
+    border-radius: 30px;
+    border: 1px solid gray;
+    position: absolute;
+    top: 0;
+    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.save-item {
+    right: 0;
+    background: greenyellow;
+}
+
+.edit-item {
+    right: 38px;
+    background: orange;
+}
+
+.delete-item {
+    right: 0;
+    background: orangered;
+}
+
+@media print {
+    body {
+        visibility: hidden;
+    }
+
+    .print {
+        visibility: visible;
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+}
