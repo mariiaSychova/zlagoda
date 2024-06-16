@@ -1,13 +1,11 @@
-import { mockUser } from "@/mock-data";
 import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
   const { id } = (await req.json()) as { id: string };
 
-  // const user = null
-  const user = mockUser;
+  const users = await executeDBQuery(`SELECT * from public.employee`);
 
-  // await executeDBQuery(`DELETE * from product WHERE id_product = ${id}`)
+  const user = users.find((u: any) => u.id_employee === id);
 
   return Response.json(user);
 }

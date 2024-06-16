@@ -56,7 +56,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState("");
 
-  const isAdmin = useMemo(() => !!user && user.empl_role === "Manager", [user]);
+  const isAdmin = useMemo(
+    () => !!user && user.empl_role === "Менеджер",
+    [user]
+  );
 
   useEffect(() => {
     (async () => {

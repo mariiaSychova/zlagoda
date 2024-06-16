@@ -18,7 +18,7 @@ export type TEmployee = {
   empl_surname: string;
   empl_name: string;
   empl_patronymic: string;
-  empl_role: "Cashier" | "Manager";
+  empl_role: "Касир" | "Менеджер";
   salary: number;
   date_of_birth: string;
   date_of_start: string;
