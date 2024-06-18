@@ -12,9 +12,9 @@ const Header = () => {
   const menuItems = [
     { href: "/products", name: "Товари" },
     ...(isAdmin ? [{ href: "/categories", name: "Категорії" }] : []),
-    { href: "/store_products", name: "Товари в магазині" },
+    { href: "/store-products", name: "Товари в магазині" },
     { href: "/checks", name: "Чеки" },
-    { href: "/customer_cards", name: "Карти клієнтів" },
+    { href: "/customer-cards", name: "Карти клієнтів" },
     ...(isAdmin ? [{ href: "/employees", name: "Працівники" }] : []),
   ];
 

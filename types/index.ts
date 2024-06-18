@@ -36,3 +36,43 @@ export type TCategory = {
 export type TCategory_Optional = {
   category_name?: string;
 };
+
+export type TCustomerCard = {
+  card_number: string;
+  cust_surname: string;
+  cust_name: string;
+  cust_patronymic?: string;
+  phone_number: string;
+  city?: string;
+  street?: string;
+  zip_code?: string;
+  percent: number;
+};
+
+export type TCustomerCard_Optional = {
+  cust_surname?: string;
+  cust_name?: string;
+  cust_patronymic?: string;
+  phone_number?: string;
+  city?: string;
+  street?: string;
+  zip_code?: string;
+  percent?: number;
+};
+
+export type TStoreProduct = {
+  upc: string;
+  upc_prom?: string;
+  id_product: number;
+  selling_price: number;
+  products_number: number;
+  promotional_product: boolean;
+};
+
+export type TStoreProduct_Optional = {
+  upc_prom?: string;
+  id_product?: number;
+  selling_price?: number;
+  products_number?: number;
+  promotional_product?: boolean;
+};
