@@ -1,13 +1,19 @@
-import { TCategory_Optional, TProduct_Optional } from "@/types"
-import { executeDBQuery } from "@/utils/db"
+import { TCategory_Optional, TProduct_Optional } from "@/types";
+import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
-    const { id } = (await req.json()) as {
-        id: number
-        data: TCategory_Optional
-    }
+  const { category_number, data } = (await req.json()) as {
+    category_number: number;
+    data: TCategory_Optional;
+  };
 
-    // await executeDBQuery("")
+  const updates = Object.entries(data)
+    .map(([key, value]) => `${key} = '${value}'`)
+    .join(", ");
 
-    return Response.json({})
+  await executeDBQuery(`
+        UPDATE public.category SET ${updates} WHERE category_number = '${category_number}'
+        `);
+
+  return Response.json({ message: "Category updated successfully" });
 }

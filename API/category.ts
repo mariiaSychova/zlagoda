@@ -1,25 +1,27 @@
-import { TCategory, TCategory_Optional } from "@/types"
-import axios from "axios"
+import { TCategory, TCategory_Optional } from "@/types";
+import axios from "axios";
 
 export const getAllCategoriesInnerRoute = async (): Promise<TCategory[]> => {
-    const data = await axios.get("/api/category/get-all")
+  const data = await axios.get("/api/category/get-all");
 
-    return data.data
-}
+  return data.data;
+};
 
 export const createCategoryInnerRoute = async (
-    data: TCategory
+  data: TCategory
 ): Promise<void> => {
-    await axios.post("/api/category/create", data)
-}
+  await axios.post("/api/category/create", data);
+};
 
 export const updateCategoryInnerRoute = async (
-    id: number,
-    data: TCategory_Optional
+  category_number: number,
+  data: TCategory_Optional
 ): Promise<void> => {
-    await axios.post("/api/category/create", { id, data })
-}
+  await axios.post("/api/category/update", { category_number, data });
+};
 
-export const deleteCategoryInnerRoute = async (id: number): Promise<void> => {
-    await axios.post("/api/category/delete", { id })
-}
+export const deleteCategoryInnerRoute = async (
+  category_number: number
+): Promise<void> => {
+  await axios.post("/api/category/delete", { category_number });
+};

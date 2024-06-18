@@ -1,10 +1,19 @@
-import { TProduct_Optional } from "@/types"
-import { executeDBQuery } from "@/utils/db"
+import { TProduct_Optional } from "@/types";
+import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
-    const { id } = (await req.json()) as { id: number; data: TProduct_Optional }
+  const { id_product, data } = (await req.json()) as {
+    id_product: number;
+    data: TProduct_Optional;
+  };
 
-    // await executeDBQuery("")
+  const updates = Object.entries(data)
+    .map(([key, value]) => `${key} = '${value}'`)
+    .join(", ");
 
-    return Response.json({})
+  await executeDBQuery(`
+        UPDATE public.product SET ${updates} WHERE id_product = '${id_product}'
+        `);
+
+  return Response.json({ message: "Product updated successfully" });
 }

@@ -1,9 +1,11 @@
-import { executeDBQuery } from "@/utils/db"
+import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
-    const { id } = (await req.json()) as { id: number }
+  const { category_number } = (await req.json()) as { category_number: number };
 
-    // await executeDBQuery(`DELETE * from product WHERE id_product = ${id}`)
+  await executeDBQuery(`
+        DELETE FROM public.category WHERE category_number = '${category_number}'
+        `);
 
-    return Response.json({})
+  return Response.json({ message: "Category deleted successfully" });
 }
