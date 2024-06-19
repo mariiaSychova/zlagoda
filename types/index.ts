@@ -27,7 +27,7 @@ export type TEmployee = {
   street: string;
   zip_code: number;
   email: string;
-  password: string;
+  password?: string;
 };
 
 export type TCategory = {

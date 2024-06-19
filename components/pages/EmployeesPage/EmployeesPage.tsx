@@ -9,14 +9,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 
-import {
-  Box,
-  Button,
-  IconButton,
-  Tooltip,
-  Select,
-  MenuItem,
-} from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import { TEmployee } from "@/types";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -33,7 +26,7 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { PageOrientation } from "pdfmake/interfaces";
 
-import { formatDate, parseDate } from "@/utils/formatDate";
+import { parseDate } from "@/utils/formatDate";
 import { isValid, differenceInYears } from "date-fns";
 
 import { encrypt } from "@/utils/auth";
@@ -211,13 +204,11 @@ const EmployeePage = () => {
       {
         accessorKey: "date_of_birth",
         header: "Дата народження",
-        //Cell: ({ cell }) => formatDate(cell.getValue<string>()),
         ...defaultColumnProps("date_of_birth"),
       },
       {
         accessorKey: "date_of_start",
         header: "Дата початку роботи",
-        //Cell: ({ cell }) => formatDate(cell.getValue<string>()),
         ...defaultColumnProps("date_of_start"),
       },
       {
@@ -295,8 +286,13 @@ const EmployeePage = () => {
 
   const handleExportRows = (rows: MRT_Row<TEmployee>[]) => {
     const tableData = sanitizeData(
-      rows.map((row) => Object.values(row.original))
+      rows.map((row) => {
+        const rowData = { ...row.original };
+        delete rowData.password;
+        return Object.values(rowData);
+      })
     );
+
     const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
 
     const docDefinition = {
@@ -317,12 +313,28 @@ const EmployeePage = () => {
         {
           table: {
             headerRows: 1,
-            widths: Array(tableHeaders.length).fill("*"),
+            widths: [
+              "2%",
+              "9%",
+              "9%",
+              "9%",
+              "7%",
+              "7%",
+              "8%",
+              "7%",
+              "10%",
+              "8%",
+              "8%",
+              "5%",
+              "12%",
+            ],
             body: [tableHeaders, ...tableData],
           },
+          fontSize: 8,
         },
       ],
     };
+
     const name: string =
       "employees_report" + new Date().toLocaleDateString() + ".pdf";
     pdfMake.createPdf(docDefinition).download(name);
