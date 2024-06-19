@@ -33,7 +33,9 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { PageOrientation } from "pdfmake/interfaces";
 
-import { format } from "date-fns";
+import { formatDate, parseDate } from "@/utils/formatDate";
+import { isValid, differenceInYears } from "date-fns";
+
 import { encrypt } from "@/utils/auth";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -80,19 +82,24 @@ const validateEmployee = (
   if (!employee.date_of_birth) {
     newErrors.date_of_birth = "Дата народження обов'язкова.";
   } else {
-    const dob = new Date(employee.date_of_birth);
-    const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear();
-    const monthDifference = today.getMonth() - dob.getMonth();
-    const dayDifference = today.getDate() - dob.getDate();
+    const dobString = parseDate(employee.date_of_birth);
+    if (!dobString) {
+      newErrors.date_of_birth = "Некоректна дата народження.";
+    } else {
+      const dob = new Date(dobString);
+      if (!isValid(dob)) {
+        newErrors.date_of_birth = "Некоректна дата народження.";
+      } else {
+        const today = new Date();
+        const age = differenceInYears(today, dob);
 
-    if (
-      isNaN(dob.getTime()) ||
-      age < 18 ||
-      (age === 18 &&
-        (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)))
-    ) {
-      newErrors.date_of_birth = "Працівник має бути старше 18 років.";
+        if (age < 18) {
+          newErrors.date_of_birth = "Працівник має бути старше 18 років.";
+        }
+        if (age >= 120) {
+          newErrors.date_of_birth = "Працівник не може бути старше 120 років.";
+        }
+      }
     }
   }
 
@@ -204,11 +211,13 @@ const EmployeePage = () => {
       {
         accessorKey: "date_of_birth",
         header: "Дата народження",
+        //Cell: ({ cell }) => formatDate(cell.getValue<string>()),
         ...defaultColumnProps("date_of_birth"),
       },
       {
         accessorKey: "date_of_start",
         header: "Дата початку роботи",
+        //Cell: ({ cell }) => formatDate(cell.getValue<string>()),
         ...defaultColumnProps("date_of_start"),
       },
       {
