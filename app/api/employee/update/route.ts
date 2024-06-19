@@ -3,7 +3,7 @@ import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
   const { id_employee, data } = (await req.json()) as {
-    id_employee: number;
+    id_employee: string;
     data: Partial<TEmployee>;
   };
 
@@ -11,9 +11,13 @@ export async function POST(req: Request) {
     .map(([key, value]) => `${key} = '${value}'`)
     .join(", ");
 
-  await executeDBQuery(`
-    UPDATE public.employee SET ${updates} WHERE id_employee = ${id_employee}
-  `);
+  console.log(
+    `UPDATE public.employee SET ${updates} WHERE id_employee = '${id_employee}'`
+  );
+
+  await executeDBQuery(
+    `UPDATE public.employee SET ${updates} WHERE id_employee = '${id_employee}'`
+  );
 
   return new Response(
     JSON.stringify({ message: "Employee updated successfully" }),

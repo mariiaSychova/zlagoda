@@ -13,7 +13,7 @@ export const createEmployeeInnerRoute = async (
 };
 
 export const updateEmployeeInnerRoute = async (
-  id_employee: number,
+  id_employee: string,
   data: Partial<TEmployee>
 ): Promise<void> => {
   await axios.post("/api/employee/update", { id_employee, data });

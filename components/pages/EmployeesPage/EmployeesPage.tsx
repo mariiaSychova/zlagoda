@@ -33,6 +33,7 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { PageOrientation } from "pdfmake/interfaces";
 
+import { format } from "date-fns";
 import { encrypt } from "@/utils/auth";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -151,7 +152,10 @@ const EmployeePage = () => {
         header: "ID",
         size: 100,
         enableEditing: false,
-        ...defaultColumnProps("id_employee", true),
+        muiEditTextFieldProps: {
+          required: true,
+          InputProps: { readOnly: true },
+        },
       },
       {
         accessorKey: "empl_name",
@@ -174,6 +178,8 @@ const EmployeePage = () => {
       {
         accessorKey: "empl_role",
         header: "Роль",
+        size: 140,
+        editVariant: "select",
         muiEditTextFieldProps: {
           required: true,
           error: !!validationErrors?.["empl_role"],
@@ -184,16 +190,11 @@ const EmployeePage = () => {
               empl_role: undefined,
             })),
           select: true,
-          SelectProps: {
-            native: true,
-          },
-          children: (
-            <>
-              <option value="Касир">Касир</option>
-              <option value="Менеджер">Менеджер</option>
-            </>
-          ),
         },
+        editSelectOptions: [
+          { value: "Менеджер", text: "Менеджер" },
+          { value: "Касир", text: "Касир" },
+        ],
       },
       {
         accessorKey: "salary",
@@ -227,18 +228,13 @@ const EmployeePage = () => {
       },
       {
         accessorKey: "zip_code",
-        header: "Поштовий індекс",
+        header: "Індекс",
         ...defaultColumnProps("zip_code"),
       },
       {
         accessorKey: "email",
         header: "Email",
         ...defaultColumnProps("email"),
-      },
-      {
-        accessorKey: "password",
-        header: "Пароль",
-        ...defaultColumnProps("password"),
       },
     ];
   }, [validationErrors, isEditing]);
@@ -254,7 +250,7 @@ const EmployeePage = () => {
       values.id_employee = employees.length
         ? Math.max(...employees.map((e) => e.id_employee)) + 1
         : 1;
-      values.password = encrypt(values.password);
+      values.password = encrypt("1234");
 
       await createEmployeeInnerRoute(values);
       table.setCreatingRow(null);
@@ -276,7 +272,7 @@ const EmployeePage = () => {
 
       delete values.password;
 
-      await updateEmployeeInnerRoute(values.id_employee, values);
+      await updateEmployeeInnerRoute(values.id_employee.toString(), values);
       table.setEditingRow(null);
       setEmployees(await getAllEmployeesInnerRoute());
     };
@@ -312,25 +308,9 @@ const EmployeePage = () => {
         {
           table: {
             headerRows: 1,
-            widths: [
-              "15%",
-              "10%",
-              "10%",
-              "10%",
-              "15%",
-              "10%",
-              "15%",
-              "10%",
-              "8%",
-              "8%",
-              "8%",
-              "8%",
-              "8%",
-              "8%",
-            ],
+            widths: Array(tableHeaders.length).fill("*"),
             body: [tableHeaders, ...tableData],
           },
-          fontSize: 10,
         },
       ],
     };
