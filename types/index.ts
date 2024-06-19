@@ -17,7 +17,7 @@ export type TEmployee = {
   id_employee: number;
   empl_surname: string;
   empl_name: string;
-  empl_patronymic: string;
+  empl_patronymic?: string;
   empl_role: "Касир" | "Менеджер";
   salary: number;
   date_of_birth: string;
@@ -26,6 +26,8 @@ export type TEmployee = {
   city: string;
   street: string;
   zip_code: number;
+  email: string;
+  password: string;
 };
 
 export type TCategory = {
