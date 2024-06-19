@@ -176,6 +176,8 @@
 @media print {
   body {
     visibility: hidden;
+    /* padding-top: 72px; */
+    padding-bottom: 72px;
   }
 
   .print {
@@ -183,5 +185,10 @@
     position: absolute;
     left: 0;
     top: 0;
+  }
+
+  @page {
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
