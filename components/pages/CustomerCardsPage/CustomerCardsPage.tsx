@@ -219,6 +219,17 @@ const CustomerCardsPage = () => {
 
     const docDefinition = {
       pageOrientation: "landscape" as PageOrientation,
+      header: {
+        text: `Магазин "Злагода" звіт за ${new Date().toLocaleDateString()}`,
+        fontSize: 12,
+      },
+
+      footer: function (currentPage: number, pageCount: number) {
+        return {
+          text: `Сторінка ${currentPage} з ${pageCount}`,
+          fontSize: 10,
+        };
+      },
       content: [
         {
           table: {
@@ -240,8 +251,9 @@ const CustomerCardsPage = () => {
         },
       ],
     };
-
-    pdfMake.createPdf(docDefinition).download("customer-cards.pdf");
+    const name: string =
+      "customer-cards" + new Date().toLocaleDateString() + ".pdf";
+    pdfMake.createPdf(docDefinition).download(name);
   };
 
   const sanitizeData = (data: any) => {
@@ -320,7 +332,11 @@ const CustomerCardsPage = () => {
     ),
   });
 
-  return <MaterialReactTable table={table} />;
+  return (
+    <Box sx={{ marginTop: "20px" }}>
+      <MaterialReactTable table={table} />;
+    </Box>
+  );
 };
 
 export default CustomerCardsPage;
