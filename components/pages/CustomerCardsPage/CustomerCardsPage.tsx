@@ -214,9 +214,6 @@ const CustomerCardsPage = () => {
     );
     const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
 
-    console.log("tableHeaders:", tableHeaders);
-    console.log("tableData:", tableData);
-
     const docDefinition = {
       pageOrientation: "landscape" as PageOrientation,
       header: {
@@ -317,7 +314,7 @@ const CustomerCardsPage = () => {
           startIcon={<FileDownloadIcon />}
           onClick={() => handleExportRows(table.getRowModel().rows)}
         >
-          Export Page Rows
+          Експорт сторінки
         </Button>
         <Button
           variant="contained"
@@ -326,7 +323,7 @@ const CustomerCardsPage = () => {
             handleExportRows(table.getPrePaginationRowModel().rows)
           }
         >
-          Export All Rows
+          Експорт всіх
         </Button>
       </Box>
     ),
