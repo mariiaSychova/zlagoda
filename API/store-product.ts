@@ -15,14 +15,14 @@ export const createStoreProductInnerRoute = async (
 };
 
 export const updateStoreProductInnerRoute = async (
-  id: number,
+  upc: string,
   data: TStoreProduct_Optional
 ): Promise<void> => {
-  await axios.post("/api/store-products/update", { id, data });
+  await axios.post("/api/store-products/update", { upc, data });
 };
 
 export const deleteStoreProductInnerRoute = async (
-  id: number
+  upc: string
 ): Promise<void> => {
-  await axios.post("/api/store-products/delete", { id });
+  await axios.post("/api/store-products/delete", { upc });
 };
