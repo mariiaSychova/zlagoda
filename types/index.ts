@@ -99,4 +99,5 @@ export type TReceipt = {
   print_date: string;
   sum_total: number;
   vat: number;
+  products: TSell[];
 };
