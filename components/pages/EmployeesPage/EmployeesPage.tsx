@@ -1,5 +1,6 @@
 "use client";
-
+console.log(encrypt("pass1234"));
+console.log(decrypt(encrypt("pass1234")));
 import { useMemo, useState, useEffect } from "react";
 import {
   MaterialReactTable,
@@ -29,7 +30,7 @@ import { PageOrientation } from "pdfmake/interfaces";
 import { parseDate } from "@/utils/formatDate";
 import { isValid, differenceInYears } from "date-fns";
 
-import { encrypt } from "@/utils/auth";
+import { encrypt, decrypt } from "@/utils/auth";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 import * as EmailValidator from "email-validator";
@@ -43,27 +44,39 @@ const validateEmployee = (
   if (!employee.empl_surname || employee.empl_surname.length > 50) {
     newErrors.empl_surname = "Прізвище обов'язкове й не більше 50 символів.";
   }
+
   if (!employee.empl_name || employee.empl_name.length > 50) {
     newErrors.empl_name = "Ім'я обов'язкове й не більше 50 символів.";
   }
+
   if (employee.empl_patronymic && employee.empl_patronymic.length > 50) {
     newErrors.empl_patronymic = "По батькові не більше 50 символів.";
   }
+
   if (!employee.empl_role) {
     newErrors.empl_role = "Роль обов'язкова";
   }
-  if (!employee.salary || employee.salary <= 0) {
+
+  if (employee.salary === undefined || employee.salary === null) {
+    newErrors.salary = "Зарплата обов'язкова.";
+  } else if (isNaN(employee.salary)) {
+    newErrors.salary = "Зарплата має бути числом.";
+  } else if (employee.salary <= 0) {
     newErrors.salary = "Зарплата має бути додатнім числом.";
   }
+
   if (!employee.phone_number || employee.phone_number.length !== 13) {
     newErrors.phone_number = "Номер телефону має бути з 13-ти символів.";
   }
+
   if (!employee.city || employee.city.length > 50) {
     newErrors.city = "Місто обов'язкове й не більше 50 символів.";
   }
+
   if (!employee.street || employee.street.length > 50) {
     newErrors.street = "Вулиця обов'язкова й не більше 50 символів.";
   }
+
   if (!employee.zip_code || !/^\d{5,9}$/.test(employee.zip_code.toString())) {
     newErrors.zip_code = "Zip code має бути від 5 до 9 цифр.";
   }
@@ -250,7 +263,7 @@ const EmployeePage = () => {
       values.id_employee = employees.length
         ? Math.max(...employees.map((e) => e.id_employee)) + 1
         : 1;
-      values.password = encrypt("1234");
+      values.password = encrypt("pass1234");
 
       await createEmployeeInnerRoute(values);
       table.setCreatingRow(null);
@@ -279,7 +292,8 @@ const EmployeePage = () => {
 
   const handleDeleteEmployee = async (row: MRT_Row<TEmployee>) => {
     if (window.confirm("Ви впевнені щодо видалення?")) {
-      await deleteEmployeeInnerRoute(row.original.id_employee);
+      await deleteEmployeeInnerRoute(row.original.id_employee.toString());
+
       setEmployees(await getAllEmployeesInnerRoute());
     }
   };
