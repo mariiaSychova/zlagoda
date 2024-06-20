@@ -13,6 +13,12 @@ export type TProduct_Optional = {
   producer?: string;
 };
 
+export type TProductForDisplay = {
+  id_product: number;
+  product_name: string;
+  producer: string;
+};
+
 export type TEmployee = {
   id_employee: number;
   empl_surname: string;
