@@ -84,3 +84,20 @@ export type TStoreProduct_Optional = {
   products_number?: number;
   promotional_product?: boolean;
 };
+
+export type TSell = {
+  upc: string;
+  check_number: string;
+  product_number: number;
+  selling_price: number;
+};
+
+export type TReceipt = {
+  check_number: string;
+  id_employee: string;
+  card_number?: string;
+  print_date: string;
+  sum_total: number;
+  vat: number;
+  products: TSell[];
+};
