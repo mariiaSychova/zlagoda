@@ -1,6 +1,4 @@
 "use client";
-// console.log(encrypt("pass1234"));
-// console.log(decrypt(encrypt("pass1234")));
 import { useMemo, useState, useEffect } from "react";
 import {
   MaterialReactTable,
@@ -57,7 +55,11 @@ const validateEmployee = (
     newErrors.empl_role = "Роль обов'язкова";
   }
 
-  if (employee.salary === undefined || employee.salary === null) {
+  if (
+    employee.salary?.toString() === "" ||
+    employee.salary === undefined ||
+    employee.salary === null
+  ) {
     newErrors.salary = "Зарплата обов'язкова.";
   } else if (isNaN(employee.salary)) {
     newErrors.salary = "Зарплата має бути числом.";
