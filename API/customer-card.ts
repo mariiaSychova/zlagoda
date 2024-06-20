@@ -1,5 +1,6 @@
 import { TCustomerCard, TCustomerCard_Optional } from "@/types";
 import axios from "axios";
+
 export const getAllCustomerCardsInnerRoute = async (): Promise<
   TCustomerCard[]
 > => {

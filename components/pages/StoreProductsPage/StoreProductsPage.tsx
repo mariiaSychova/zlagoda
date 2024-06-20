@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo, useState, useEffect } from "react";
 import {
   MaterialReactTable,
@@ -10,95 +9,91 @@ import {
 } from "material-react-table";
 
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
-import { TCustomerCard } from "@/types/index";
+import { TStoreProduct } from "@/types";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 import {
-  getAllCustomerCardsInnerRoute,
-  createCustomerCardInnerRoute,
-  updateCustomerCardInnerRoute,
-  deleteCustomerCardInnerRoute,
-} from "@/API/customer-card";
+  getAllStoreProductsInnerRoute,
+  createStoreProductInnerRoute,
+  updateStoreProductInnerRoute,
+  deleteStoreProductInnerRoute,
+} from "@/API/store-product";
 
-//imports for exportData
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { PageOrientation } from "pdfmake/interfaces";
-//import { jsPDF } from "jspdf";
-//import autoTable from "jspdf-autotable";
+
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
-const validateCard = (
-  card: Partial<TCustomerCard>,
-  existingCards: TCustomerCard[]
+const validateStoreProduct = (
+  product: Partial<TStoreProduct>,
+  existingProducts: TStoreProduct[]
 ): { [key: string]: string } => {
   const newErrors: { [key: string]: string } = {};
 
-  if (!card.card_number || !/^\d{13}$/.test(card.card_number)) {
-    newErrors.card_number = "Номер картки має бути з 13-ти цифр.";
+  if (!product.upc || product.upc.length !== 12) {
+    newErrors.upc = "UPC обов'язковий і має складатися з 12 символів.";
   }
-  if (!card.cust_surname || card.cust_surname.length > 50) {
-    newErrors.cust_surname = "Прізвище обов'язкове й не більше 50 символів.";
+
+  if (product.upc_prom && product.upc_prom.length !== 12) {
+    newErrors.upc_prom = "UPC промо-продукту має складатися з 12 символів.";
   }
-  if (!card.cust_name || card.cust_name.length > 50) {
-    newErrors.cust_name = "Ім'я обов'язкове й не більше 50 символів.";
+
+  if (product.id_product === undefined || product.id_product === null) {
+    newErrors.id_product = "ID продукту обов'язковий.";
   }
-  if (card.cust_patronymic && card.cust_patronymic.length > 50) {
-    newErrors.cust_patronymic = "По батькові не більше 50 символів.";
-  }
-  if (!card.phone_number || card.phone_number.length !== 13) {
-    newErrors.phone_number = "Номер телефону має бути з 13-ти символів.";
-  }
-  if (card.city && card.city.length > 50) {
-    newErrors.city = "Місто не більше 50 символів.";
-  }
-  if (card.street && card.street.length > 50) {
-    newErrors.street = "Вулиця не більше 50 символів.";
-  }
-  if (card.zip_code && !/^\d{5,9}$/.test(card.zip_code)) {
-    newErrors.zip_code = "Zip code має бути від 5 до 9 цифр.";
-  }
-  if (
-    !card.percent ||
-    card.percent === undefined ||
-    card.percent < 0 ||
-    card.percent > 100
-  ) {
-    newErrors.percent = "Відсоток має бути від 0 до 100.";
+
+  if (product.selling_price === undefined || product.selling_price === null) {
+    newErrors.selling_price = "Ціна обов'язкова.";
+  } else if (isNaN(product.selling_price)) {
+    newErrors.selling_price = "Ціна має бути числом.";
+  } else if (product.selling_price <= 0) {
+    newErrors.selling_price = "Ціна має бути додатнім числом.";
   }
 
   if (
-    existingCards.some(
-      (existingCard) => existingCard.card_number === card.card_number
-    )
+    product.products_number === undefined ||
+    product.products_number === null
   ) {
-    newErrors.card_number = "Картка з таким номером вже існує.";
+    newErrors.products_number = "Кількість обов'язкова.";
+  } else if (isNaN(product.products_number)) {
+    newErrors.products_number = "Кількість має бути числом.";
+  } else if (product.products_number < 0) {
+    newErrors.products_number = "Кількість не може бути від'ємним числом.";
+  }
+
+  if (
+    product.promotional_product === undefined ||
+    product.promotional_product === null
+  ) {
+    newErrors.promotional_product = "Поле промо-продукт обов'язкове.";
   }
 
   return newErrors;
 };
 
-const CustomerCardsPage = () => {
-  const [customerCards, setCustomerCards] = useState<TCustomerCard[]>([]);
+const StoreProductsPage = () => {
+  const [storeProducts, setStoreProducts] = useState<TStoreProduct[]>([]);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
+
   useEffect(() => {
-    const fetchCustomerCards = async () => {
-      const cards = await getAllCustomerCardsInnerRoute();
-      setCustomerCards(cards);
+    const fetchStoreProducts = async () => {
+      const data = await getAllStoreProductsInnerRoute();
+      setStoreProducts(data);
     };
-    fetchCustomerCards();
+    fetchStoreProducts();
   }, []);
 
-  const columns = useMemo<MRT_ColumnDef<TCustomerCard>[]>(() => {
+  const columns = useMemo<MRT_ColumnDef<TStoreProduct>[]>(() => {
     const defaultColumnProps = (
       field: string,
-      required: boolean = false,
+      required: boolean = true,
       editable = true
     ) => ({
       muiEditTextFieldProps: {
@@ -118,100 +113,95 @@ const CustomerCardsPage = () => {
 
     return [
       {
-        accessorKey: "card_number",
-        header: "Номер карти",
-        size: 180,
-        ...defaultColumnProps("card_number", true, !isEditing),
-      },
-      {
-        accessorKey: "cust_name",
-        header: "Ім'я",
+        accessorKey: "upc",
+        header: "UPC",
         size: 160,
-        ...defaultColumnProps("cust_name", true),
+        ...defaultColumnProps("upc"),
       },
       {
-        accessorKey: "cust_surname",
-        header: "Прізвище",
+        accessorKey: "upc_prom",
+        header: "UPC промо-продукту",
         size: 160,
-        ...defaultColumnProps("cust_surname", true),
+        ...defaultColumnProps("upc_prom", false),
       },
       {
-        accessorKey: "cust_patronymic",
-        header: "По батькові",
-        value: "N/A",
-        size: 180,
-        ...defaultColumnProps("cust_patronymic"),
+        accessorKey: "id_product",
+        header: "ID продукту",
+        size: 160,
+        ...defaultColumnProps("id_product"),
       },
       {
-        accessorKey: "phone_number",
-        header: "Номер телефону",
-        ...defaultColumnProps("phone_number", true),
-      },
-      {
-        accessorKey: "city",
-        header: "Місто",
+        accessorKey: "selling_price",
+        header: "Ціна",
         size: 140,
-        ...defaultColumnProps("city"),
+        ...defaultColumnProps("selling_price"),
       },
       {
-        accessorKey: "street",
-        header: "Вулиця",
-        ...defaultColumnProps("street"),
+        accessorKey: "products_number",
+        header: "Кількість",
+        size: 140,
+        ...defaultColumnProps("products_number"),
       },
       {
-        accessorKey: "zip_code",
-        header: "Поштовий індекс",
-        ...defaultColumnProps("zip_code"),
-      },
-      {
-        accessorKey: "percent",
-        header: "Відсоток",
-        size: 80,
-        ...defaultColumnProps("percent", true),
+        accessorKey: "promotional_product",
+        header: "Промо-продукт",
+        size: 160,
+        muiEditTextFieldProps: {
+          required: true,
+          error: !!validationErrors?.["promotional_product"],
+          helperText: validationErrors?.["promotional_product"],
+          onFocus: () =>
+            setValidationErrors((prev) => ({
+              ...prev,
+              promotional_product: undefined,
+            })),
+        },
       },
     ];
   }, [validationErrors, isEditing]);
 
-  const handleCreateCustomerCard: MRT_TableOptions<TCustomerCard>["onCreatingRowSave"] =
+  const handleCreateStoreProduct: MRT_TableOptions<TStoreProduct>["onCreatingRowSave"] =
     async ({ values, table }) => {
-      const errors = validateCard(values, customerCards);
+      const errors = validateStoreProduct(values, storeProducts);
       if (Object.keys(errors).length) {
         setValidationErrors(errors);
         return;
       }
 
-      await createCustomerCardInnerRoute(values);
+      await createStoreProductInnerRoute(values);
       table.setCreatingRow(null);
-      setCustomerCards(await getAllCustomerCardsInnerRoute());
+      setStoreProducts(await getAllStoreProductsInnerRoute());
     };
 
-  const handleSaveCustomerCard: MRT_TableOptions<TCustomerCard>["onEditingRowSave"] =
+  const handleSaveStoreProduct: MRT_TableOptions<TStoreProduct>["onEditingRowSave"] =
     async ({ values, table }) => {
-      const errors = validateCard(
+      const errors = validateStoreProduct(
         values,
-        customerCards.filter((card) => card.card_number !== values.card_number)
+        storeProducts.filter((product) => product.upc !== values.upc)
       );
       if (Object.keys(errors).length) {
         setValidationErrors(errors);
         return;
       }
 
-      await updateCustomerCardInnerRoute(values.card_number, values);
+      await updateStoreProductInnerRoute(values.upc, values);
       table.setEditingRow(null);
-      setCustomerCards(await getAllCustomerCardsInnerRoute());
+      setStoreProducts(await getAllStoreProductsInnerRoute());
     };
 
-  const handleDeleteCustomerCard = async (row: MRT_Row<TCustomerCard>) => {
+  const handleDeleteStoreProduct = async (row: MRT_Row<TStoreProduct>) => {
     if (window.confirm("Ви впевнені щодо видалення?")) {
-      await deleteCustomerCardInnerRoute(row.original.card_number);
-      setCustomerCards(await getAllCustomerCardsInnerRoute());
+      await deleteStoreProductInnerRoute(row.original.upc);
+
+      setStoreProducts(await getAllStoreProductsInnerRoute());
     }
   };
 
-  const handleExportRows = (rows: MRT_Row<TCustomerCard>[]) => {
+  const handleExportRows = (rows: MRT_Row<TStoreProduct>[]) => {
     const tableData = sanitizeData(
       rows.map((row) => Object.values(row.original))
     );
+
     const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
 
     const docDefinition = {
@@ -227,29 +217,21 @@ const CustomerCardsPage = () => {
           fontSize: 10,
         };
       },
+
       content: [
         {
           table: {
             headerRows: 1,
-            widths: [
-              "15%",
-              "10%",
-              "10%",
-              "10%",
-              "15%",
-              "10%",
-              "15%",
-              "10%",
-              "8%",
-            ],
+            widths: ["15%", "15%", "10%", "10%", "10%", "10%", "10%"],
             body: [tableHeaders, ...tableData],
           },
-          fontSize: 10,
+          fontSize: 8,
         },
       ],
     };
+
     const name: string =
-      "customer-cards" + new Date().toLocaleDateString() + ".pdf";
+      "store_products_report" + new Date().toLocaleDateString() + ".pdf";
     pdfMake.createPdf(docDefinition).download(name);
   };
 
@@ -265,13 +247,13 @@ const CustomerCardsPage = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: customerCards,
+    data: storeProducts,
     createDisplayMode: "modal",
     editDisplayMode: "modal",
     enableEditing: true,
-    getRowId: (row) => row.card_number,
-    onCreatingRowSave: handleCreateCustomerCard,
-    onEditingRowSave: handleSaveCustomerCard,
+    getRowId: (row) => row.upc,
+    onCreatingRowSave: handleCreateStoreProduct,
+    onEditingRowSave: handleSaveStoreProduct,
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "1rem" }}>
         <Tooltip title="Edit">
@@ -288,7 +270,7 @@ const CustomerCardsPage = () => {
         <Tooltip title="Delete">
           <IconButton
             color="error"
-            onClick={() => handleDeleteCustomerCard(row)}
+            onClick={() => handleDeleteStoreProduct(row)}
           >
             <DeleteIcon />
           </IconButton>
@@ -336,4 +318,4 @@ const CustomerCardsPage = () => {
   );
 };
 
-export default CustomerCardsPage;
+export default StoreProductsPage;
