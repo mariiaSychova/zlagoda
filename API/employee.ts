@@ -42,7 +42,7 @@ export const updateEmployeeInnerRoute = async (
 };
 
 export const deleteEmployeeInnerRoute = async (
-  id_employee: number
+  id_employee: string
 ): Promise<void> => {
   await axios.post("/api/employee/delete", { id_employee });
 };
