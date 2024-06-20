@@ -1,6 +1,6 @@
 "use client";
-console.log(encrypt("pass1234"));
-console.log(decrypt(encrypt("pass1234")));
+// console.log(encrypt("pass1234"));
+// console.log(decrypt(encrypt("pass1234")));
 import { useMemo, useState, useEffect } from "react";
 import {
   MaterialReactTable,
