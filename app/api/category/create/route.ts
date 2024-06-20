@@ -1,10 +1,16 @@
-import { TCategory, TProduct } from "@/types"
-import { executeDBQuery } from "@/utils/db"
+import { TCategory } from "@/types";
+import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
-    const data = (await req.json()) as TCategory
+  const data = (await req.json()) as TCategory;
 
-    // await executeDBQuery("")
+  await executeDBQuery(`
+        INSERT INTO public.category
+        (category_number, category_name)
+        VALUES
+        ('${data.category_number}',
+        '${data.category_name}')
+        `);
 
-    return Response.json({})
+  return Response.json({ message: "Category created successfully" });
 }
