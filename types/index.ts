@@ -1,78 +1,89 @@
 export type TProduct = {
-  id_product: number;
-  category_number: number;
-  product_name: string;
-  characteristics: string;
-  producer: string;
-};
+    id_product: number
+    category_number: number
+    product_name: string
+    characteristics: string
+    producer: string
+}
 
 export type TProduct_Optional = {
-  category_number?: number;
-  product_name?: string;
-  characteristics?: string;
-  producer?: string;
-};
+    category_number?: number
+    product_name?: string
+    characteristics?: string
+    producer?: string
+}
 
 export type TEmployee = {
-  id_employee: number;
-  empl_surname: string;
-  empl_name: string;
-  empl_patronymic: string;
-  empl_role: "Касир" | "Менеджер";
-  salary: number;
-  date_of_birth: string;
-  date_of_start: string;
-  phone_number: string;
-  city: string;
-  street: string;
-  zip_code: number;
-};
+    id_employee: number
+    empl_surname: string
+    empl_name: string
+    empl_patronymic: string
+    empl_role: "Касир" | "Менеджер"
+    salary: number
+    date_of_birth: string
+    date_of_start: string
+    phone_number: string
+    city: string
+    street: string
+    zip_code: number
+}
 
 export type TCategory = {
-  category_number: number;
-  category_name: string;
-};
+    category_number: number
+    category_name: string
+}
 
 export type TCategory_Optional = {
-  category_name?: string;
-};
+    category_name?: string
+}
 
 export type TCustomerCard = {
-  card_number: string;
-  cust_surname: string;
-  cust_name: string;
-  cust_patronymic?: string;
-  phone_number: string;
-  city?: string;
-  street?: string;
-  zip_code?: string;
-  percent: number;
-};
+    card_number: string
+    cust_surname: string
+    cust_name: string
+    cust_patronymic?: string
+    phone_number: string
+    city?: string
+    street?: string
+    zip_code?: string
+    percent: number
+}
 
 export type TCustomerCard_Optional = {
-  cust_surname?: string;
-  cust_name?: string;
-  cust_patronymic?: string;
-  phone_number?: string;
-  city?: string;
-  street?: string;
-  zip_code?: string;
-  percent?: number;
-};
+    cust_surname?: string
+    cust_name?: string
+    cust_patronymic?: string
+    phone_number?: string
+    city?: string
+    street?: string
+    zip_code?: string
+    percent?: number
+}
 
 export type TStoreProduct = {
-  upc: string;
-  upc_prom?: string;
-  id_product: number;
-  selling_price: number;
-  products_number: number;
-  promotional_product: boolean;
-};
+    upc: string
+    upc_prom?: string
+    id_product: number
+    selling_price: number
+    products_number: number
+    promotional_product: boolean
+}
 
 export type TStoreProduct_Optional = {
-  upc_prom?: string;
-  id_product?: number;
-  selling_price?: number;
-  products_number?: number;
-  promotional_product?: boolean;
-};
+    upc_prom?: string
+    id_product?: number
+    selling_price?: number
+    products_number?: number
+    promotional_product?: boolean
+}
+
+export type TMariia_1 = {
+    card_number: number
+    cust_name: string
+    cust_surname: string
+}
+
+export type TMariia_2 = {
+    product_name: string
+    characteristics: string
+}

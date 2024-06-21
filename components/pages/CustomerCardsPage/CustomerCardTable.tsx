@@ -174,7 +174,7 @@ const CustomerCardTable: React.FC<Props> = ({
         editingCardNumber === cell.row.original.card_number ? (
           <TextField
             type="number"
-            value={cell.getValue<number>().toString()}
+            value={cell.getValue<number>()?.toString()}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               handleChange(e, cell.row.original.card_number, "percent")
             }
@@ -183,7 +183,7 @@ const CustomerCardTable: React.FC<Props> = ({
             helperText={errors[cell.row.original.card_number]?.percent}
           />
         ) : (
-          cell.getValue<number>().toString()
+          cell.getValue<number>()?.toString()
         ),
     },
     {
