@@ -1,276 +1,339 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Box, Typography, TextField, Button, Stack } from "@mui/material";
-import { TCustomerCard } from "@/types";
+import { useMemo, useState, useEffect } from "react";
+import {
+  MaterialReactTable,
+  type MRT_ColumnDef,
+  type MRT_Row,
+  type MRT_TableOptions,
+  useMaterialReactTable,
+} from "material-react-table";
+
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import { TCustomerCard } from "@/types/index";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+
 import {
   getAllCustomerCardsInnerRoute,
   createCustomerCardInnerRoute,
   updateCustomerCardInnerRoute,
   deleteCustomerCardInnerRoute,
 } from "@/API/customer-card";
-import CustomerCardTable from "@/components/pages/CustomerCardsPage/CustomerCardTable";
-import "./CustomerCardsPage.css";
 
-const CustomerCardPage: React.FC = () => {
+//imports for exportData
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+import { PageOrientation } from "pdfmake/interfaces";
+//import { jsPDF } from "jspdf";
+//import autoTable from "jspdf-autotable";
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+const validateCard = (
+  card: Partial<TCustomerCard>,
+  existingCards: TCustomerCard[]
+): { [key: string]: string } => {
+  const newErrors: { [key: string]: string } = {};
+
+  if (!card.card_number || !/^\d{13}$/.test(card.card_number)) {
+    newErrors.card_number = "Номер картки має бути з 13-ти цифр.";
+  }
+  if (!card.cust_surname || card.cust_surname.length > 50) {
+    newErrors.cust_surname = "Прізвище обов'язкове й не більше 50 символів.";
+  }
+  if (!card.cust_name || card.cust_name.length > 50) {
+    newErrors.cust_name = "Ім'я обов'язкове й не більше 50 символів.";
+  }
+  if (card.cust_patronymic && card.cust_patronymic.length > 50) {
+    newErrors.cust_patronymic = "По батькові не більше 50 символів.";
+  }
+  if (!card.phone_number || card.phone_number.length !== 13) {
+    newErrors.phone_number = "Номер телефону має бути з 13-ти символів.";
+  }
+  if (card.city && card.city.length > 50) {
+    newErrors.city = "Місто не більше 50 символів.";
+  }
+  if (card.street && card.street.length > 50) {
+    newErrors.street = "Вулиця не більше 50 символів.";
+  }
+  if (card.zip_code && !/^\d{5,9}$/.test(card.zip_code)) {
+    newErrors.zip_code = "Zip code має бути від 5 до 9 цифр.";
+  }
+  if (
+    !card.percent ||
+    card.percent === undefined ||
+    card.percent < 0 ||
+    card.percent > 100
+  ) {
+    newErrors.percent = "Відсоток має бути від 0 до 100.";
+  }
+
+  if (
+    existingCards.some(
+      (existingCard) => existingCard.card_number === card.card_number
+    )
+  ) {
+    newErrors.card_number = "Картка з таким номером вже існує.";
+  }
+
+  return newErrors;
+};
+
+const CustomerCardsPage = () => {
   const [customerCards, setCustomerCards] = useState<TCustomerCard[]>([]);
-  const [editingCardNumber, setEditingCardNumber] = useState<string | null>(
-    null
-  );
-  const [newCard, setNewCard] = useState<Partial<TCustomerCard>>({});
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [editErrors, setEditErrors] = useState<{
-    [key: string]: { [key: string]: string };
-  }>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string | undefined>
+  >({});
 
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   useEffect(() => {
+    const fetchCustomerCards = async () => {
+      const cards = await getAllCustomerCardsInnerRoute();
+      setCustomerCards(cards);
+    };
     fetchCustomerCards();
   }, []);
 
-  const fetchCustomerCards = async () => {
-    const data = await getAllCustomerCardsInnerRoute();
-    setCustomerCards(data);
+  const columns = useMemo<MRT_ColumnDef<TCustomerCard>[]>(() => {
+    const defaultColumnProps = (
+      field: string,
+      required: boolean = false,
+      editable = true
+    ) => ({
+      muiEditTextFieldProps: {
+        required,
+        error: !!validationErrors?.[field],
+        helperText: validationErrors?.[field],
+        onFocus: () =>
+          setValidationErrors((prev) => ({
+            ...prev,
+            [field]: undefined,
+          })),
+        InputProps: {
+          readOnly: !editable,
+        },
+      },
+    });
+
+    return [
+      {
+        accessorKey: "card_number",
+        header: "Номер карти",
+        size: 180,
+        ...defaultColumnProps("card_number", true, !isEditing),
+      },
+      {
+        accessorKey: "cust_name",
+        header: "Ім'я",
+        size: 160,
+        ...defaultColumnProps("cust_name", true),
+      },
+      {
+        accessorKey: "cust_surname",
+        header: "Прізвище",
+        size: 160,
+        ...defaultColumnProps("cust_surname", true),
+      },
+      {
+        accessorKey: "cust_patronymic",
+        header: "По батькові",
+        value: "N/A",
+        size: 180,
+        ...defaultColumnProps("cust_patronymic"),
+      },
+      {
+        accessorKey: "phone_number",
+        header: "Номер телефону",
+        ...defaultColumnProps("phone_number", true),
+      },
+      {
+        accessorKey: "city",
+        header: "Місто",
+        size: 140,
+        ...defaultColumnProps("city"),
+      },
+      {
+        accessorKey: "street",
+        header: "Вулиця",
+        ...defaultColumnProps("street"),
+      },
+      {
+        accessorKey: "zip_code",
+        header: "Поштовий індекс",
+        ...defaultColumnProps("zip_code"),
+      },
+      {
+        accessorKey: "percent",
+        header: "Відсоток",
+        size: 80,
+        ...defaultColumnProps("percent", true),
+      },
+    ];
+  }, [validationErrors, isEditing]);
+
+  const handleCreateCustomerCard: MRT_TableOptions<TCustomerCard>["onCreatingRowSave"] =
+    async ({ values, table }) => {
+      const errors = validateCard(values, customerCards);
+      if (Object.keys(errors).length) {
+        setValidationErrors(errors);
+        return;
+      }
+
+      await createCustomerCardInnerRoute(values);
+      table.setCreatingRow(null);
+      setCustomerCards(await getAllCustomerCardsInnerRoute());
+    };
+
+  const handleSaveCustomerCard: MRT_TableOptions<TCustomerCard>["onEditingRowSave"] =
+    async ({ values, table }) => {
+      const errors = validateCard(
+        values,
+        customerCards.filter((card) => card.card_number !== values.card_number)
+      );
+      if (Object.keys(errors).length) {
+        setValidationErrors(errors);
+        return;
+      }
+
+      await updateCustomerCardInnerRoute(values.card_number, values);
+      table.setEditingRow(null);
+      setCustomerCards(await getAllCustomerCardsInnerRoute());
+    };
+
+  const handleDeleteCustomerCard = async (row: MRT_Row<TCustomerCard>) => {
+    if (window.confirm("Ви впевнені щодо видалення?")) {
+      await deleteCustomerCardInnerRoute(row.original.card_number);
+      setCustomerCards(await getAllCustomerCardsInnerRoute());
+    }
   };
 
-  const validateCard = (
-    card: Partial<TCustomerCard>
-  ): { [key: string]: string } => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!card.card_number || !/^\d{13}$/.test(card.card_number)) {
-      newErrors.card_number = "Номер картки має бути з 13-ти цифр.";
-    }
-    if (!card.cust_surname || card.cust_surname.length > 50) {
-      newErrors.cust_surname = "Прізвище обов'язкове і не більше 50 символів.";
-    }
-    if (!card.cust_name || card.cust_name.length > 50) {
-      newErrors.cust_name = "Ім'я обов'язкове і не більше 50 символів.";
-    }
-    if (card.cust_patronymic && card.cust_patronymic.length > 50) {
-      newErrors.cust_patronymic = "По батькові не більше 50 символів.";
-    }
-    if (!card.phone_number || card.phone_number.length !== 13) {
-      newErrors.phone_number = "Номер телефону має бути з 13-ти символів.";
-    }
-    if (card.city && card.city.length > 50) {
-      newErrors.city = "Місто не більше 50 символів.";
-    }
-    if (card.street && card.street.length > 50) {
-      newErrors.street = "Вулиця не більше 50 символів.";
-    }
-    if (card.zip_code && !/^\d{5,9}$/.test(card.zip_code)) {
-      newErrors.zip_code = "Zip code має бути від 5 до 9 цифр.";
-    }
-    if (card.percent === undefined || card.percent < 0 || card.percent > 100) {
-      newErrors.percent = "Відсоток має бути від 0 до 100.";
-    }
-    return newErrors;
-  };
-
-  const handleEdit = (cardNumber: string) => {
-    setEditingCardNumber(cardNumber);
-    setEditErrors((prev) => ({ ...prev, [cardNumber]: {} }));
-  };
-
-  const handleDelete = async (cardNumber: string) => {
-    await deleteCustomerCardInnerRoute(cardNumber);
-    fetchCustomerCards();
-  };
-
-  const handleSave = async (cardNumber: string) => {
-    const updatedCard = customerCards.find(
-      (card) => card.card_number === cardNumber
+  const handleExportRows = (rows: MRT_Row<TCustomerCard>[]) => {
+    const tableData = sanitizeData(
+      rows.map((row) => Object.values(row.original))
     );
-    const newErrors = validateCard(updatedCard!);
-    if (Object.keys(newErrors).length > 0) {
-      setEditErrors((prev) => ({ ...prev, [cardNumber]: newErrors }));
-      return;
-    }
-    await updateCustomerCardInnerRoute(
-      cardNumber,
-      updatedCard as TCustomerCard
-    );
-    setEditingCardNumber(null);
-    fetchCustomerCards();
+    const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
+
+    const docDefinition = {
+      pageOrientation: "landscape" as PageOrientation,
+      header: {
+        text: `Магазин "Злагода" звіт за ${new Date().toLocaleDateString()}`,
+        fontSize: 12,
+      },
+
+      footer: function (currentPage: number, pageCount: number) {
+        return {
+          text: `Сторінка ${currentPage} з ${pageCount}`,
+          fontSize: 10,
+        };
+      },
+      content: [
+        {
+          table: {
+            headerRows: 1,
+            widths: [
+              "15%",
+              "10%",
+              "10%",
+              "10%",
+              "15%",
+              "10%",
+              "15%",
+              "10%",
+              "8%",
+            ],
+            body: [tableHeaders, ...tableData],
+          },
+          fontSize: 10,
+        },
+      ],
+    };
+    const name: string =
+      "customer-cards" + new Date().toLocaleDateString() + ".pdf";
+    pdfMake.createPdf(docDefinition).download(name);
   };
 
-  const handleAdd = async () => {
-    const newErrors = validateCard(newCard as TCustomerCard);
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    await createCustomerCardInnerRoute(newCard as TCustomerCard);
-    setNewCard({});
-    setErrors({});
-    fetchCustomerCards();
+  const sanitizeData = (data: any) => {
+    return data.map((row: any) => {
+      return row.map((cell: any) => {
+        if (cell === null || cell === undefined) return "";
+        if (typeof cell === "object") return JSON.stringify(cell);
+        return cell;
+      });
+    });
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    cardNumber: string,
-    key: keyof TCustomerCard
-  ) => {
-    const updatedCards = customerCards.map((card) =>
-      card.card_number === cardNumber
-        ? { ...card, [key]: e.target.value }
-        : card
-    );
-    setCustomerCards(updatedCards);
-    setEditErrors((prev) => ({
-      ...prev,
-      [cardNumber]: { ...prev[cardNumber], [key]: "" },
-    }));
-  };
-
-  const handleNewCardChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    key: keyof TCustomerCard
-  ) => {
-    setNewCard({ ...newCard, [key]: e.target.value });
-    setErrors((prev) => ({ ...prev, [key]: "" }));
-  };
-
-  return (
-    <Stack sx={{ m: "2rem 0" }}>
-      <Typography variant="h4" textAlign="center">
-        Карти постійних клієнтів
-      </Typography>
-      <CustomerCardTable
-        customerCards={customerCards}
-        editingCardNumber={editingCardNumber}
-        errors={editErrors}
-        handleEdit={handleEdit}
-        handleDelete={handleDelete}
-        handleSave={handleSave}
-        handleChange={handleChange}
-      />
-      <Box className="add-new-card-section" sx={{ marginTop: "20px" }}>
-        <Typography variant="h6" textAlign="center">
-          Додати нову картку
-        </Typography>
-        <Box
-          className="new-card-form"
-          sx={{
-            display: "flex",
-            gap: "10px",
-            alignItems: "flex-start",
-            flexWrap: "wrap",
-            marginTop: "10px",
-          }}
-        >
-          <TextField
-            label="Номер картки"
-            value={newCard.card_number || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "card_number")
-            }
-            size="small"
-            error={!!errors.card_number}
-            helperText={errors.card_number}
-            sx={{ flexBasis: "calc(20% - 10px)" }}
-          />
-          <TextField
-            label="Прізвище"
-            value={newCard.cust_surname || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "cust_surname")
-            }
-            size="small"
-            error={!!errors.cust_surname}
-            helperText={errors.cust_surname}
-            sx={{ flexBasis: "calc(20% + 20px)" }}
-          />
-          <TextField
-            label="Ім'я"
-            value={newCard.cust_name || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "cust_name")
-            }
-            size="small"
-            error={!!errors.cust_name}
-            helperText={errors.cust_name}
-            sx={{ flexBasis: "calc(20% + 20px)" }}
-          />
-          <TextField
-            label="По батькові"
-            value={newCard.cust_patronymic || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "cust_patronymic")
-            }
-            size="small"
-            sx={{ flexBasis: "calc(20% + 20px)" }}
-          />
-          <TextField
-            label="Номер телефону"
-            value={newCard.phone_number || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "phone_number")
-            }
-            size="small"
-            error={!!errors.phone_number}
-            helperText={errors.phone_number}
-            sx={{ flexBasis: "calc(20%)" }}
-          />
-          <TextField
-            label="Місто"
-            value={newCard.city || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "city")
-            }
-            size="small"
-            error={!!errors.city}
-            helperText={errors.city}
-            sx={{ flexBasis: "calc(20%)" }}
-          />
-          <TextField
-            label="Вулиця"
-            value={newCard.street || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "street")
-            }
-            size="small"
-            error={!!errors.street}
-            helperText={errors.street}
-            sx={{ flexBasis: "calc(20%)" }}
-          />
-          <TextField
-            label="Zip Code"
-            value={newCard.zip_code || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "zip_code")
-            }
-            size="small"
-            error={!!errors.zip_code}
-            helperText={errors.zip_code}
-            sx={{ flexBasis: "calc(10%)" }}
-          />
-          <TextField
-            label="Відсоток"
-            type="number"
-            value={newCard.percent || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleNewCardChange(e, "percent")
-            }
-            size="small"
-            error={!!errors.percent}
-            helperText={errors.percent}
-            sx={{ flexBasis: "calc(10%)" }}
-          />
-          <Button
-            onClick={handleAdd}
-            variant="contained"
-            sx={{
-              flexBasis: "100px",
-              alignSelf: "flex-center",
+  const table = useMaterialReactTable({
+    columns,
+    data: customerCards,
+    createDisplayMode: "modal",
+    editDisplayMode: "modal",
+    enableEditing: true,
+    getRowId: (row) => row.card_number,
+    onCreatingRowSave: handleCreateCustomerCard,
+    onEditingRowSave: handleSaveCustomerCard,
+    renderRowActions: ({ row, table }) => (
+      <Box sx={{ display: "flex", gap: "1rem" }}>
+        <Tooltip title="Edit">
+          <IconButton
+            onClick={() => {
+              table.setEditingRow(row);
+              setIsEditing(true);
+              setValidationErrors({});
             }}
           >
-            Додати
-          </Button>
-        </Box>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete">
+          <IconButton
+            color="error"
+            onClick={() => handleDeleteCustomerCard(row)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
-    </Stack>
+    ),
+    renderTopToolbarCustomActions: ({ table }) => (
+      <Box
+        sx={{ display: "flex", gap: "16px", padding: "8px", flexWrap: "wrap" }}
+      >
+        <Button
+          variant="contained"
+          onClick={() => {
+            table.setCreatingRow(true);
+            setIsEditing(false);
+            setValidationErrors({});
+          }}
+        >
+          Додати
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<FileDownloadIcon />}
+          onClick={() => handleExportRows(table.getRowModel().rows)}
+        >
+          Експорт сторінки
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<FileDownloadIcon />}
+          onClick={() =>
+            handleExportRows(table.getPrePaginationRowModel().rows)
+          }
+        >
+          Експорт всіх
+        </Button>
+      </Box>
+    ),
+  });
+
+  return (
+    <Box sx={{ marginTop: "20px" }}>
+      <MaterialReactTable table={table} />;
+    </Box>
   );
 };
 
-export default CustomerCardPage;
+export default CustomerCardsPage;

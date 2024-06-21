@@ -8,9 +8,10 @@ export async function POST(req: Request) {
   };
 
   const updates = Object.entries(data)
-    .map(([key, value]) => `${key} = '${value}'`)
+    .map(([key, value]) => {
+      return value === null ? `${key} = NULL` : `${key} = '${value}'`;
+    })
     .join(", ");
-
   await executeDBQuery(`
     UPDATE public.store_product SET ${updates} WHERE upc = '${upc}'
   `);
