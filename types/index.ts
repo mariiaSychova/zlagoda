@@ -68,6 +68,13 @@ export type TCustomerCard_Optional = {
   percent?: number;
 };
 
+export type TCustomerCardForDisplay = {
+  card_number: string;
+  cust_surname: string;
+  cust_name: string;
+  cust_patronymic?: string;
+};
+
 export type TStoreProduct = {
   upc: string;
   upc_prom?: string;
