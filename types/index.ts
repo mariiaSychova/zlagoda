@@ -36,6 +36,13 @@ export type TEmployee = {
   password?: string;
 };
 
+export type TEmployeeForDisplay = {
+  id_employee: number;
+  empl_surname: string;
+  empl_name: string;
+  empl_patronymic?: string;
+};
+
 export type TCategory = {
   category_number: number;
   category_name: string;
@@ -73,6 +80,7 @@ export type TCustomerCardForDisplay = {
   cust_surname: string;
   cust_name: string;
   cust_patronymic?: string;
+  percent: number;
 };
 
 export type TStoreProduct = {

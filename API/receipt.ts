@@ -1,13 +1,21 @@
 import axios from "axios";
 import { TReceipt } from "@/types";
+import { formatDateFull } from "@/utils/formatDate";
 
 export const getAllReceiptsInnerRoute = async (): Promise<TReceipt[]> => {
   const response = await axios.get("/api/receipt/get-all");
-  return response.data;
+  const receipts = response.data as TReceipt[];
+
+  const formattedReceipts = receipts.map((receipt) => ({
+    ...receipt,
+    print_date: formatDateFull(receipt.print_date),
+  }));
+
+  return formattedReceipts;
 };
 
 export const createReceiptInnerRoute = async (
-  data: TReceipt
+  data: Partial<TReceipt>
 ): Promise<void> => {
   await axios.post("/api/receipt/create", data);
 };
@@ -18,6 +26,8 @@ export const updateReceiptInnerRoute = async (
   await axios.put("/api/receipt/update", data);
 };
 
-export const deleteReceiptInnerRoute = async (id: string): Promise<void> => {
-  await axios.delete("/api/receipt/delete", { data: { id } });
+export const deleteReceiptInnerRoute = async (
+  check_number: string
+): Promise<void> => {
+  await axios.delete("/api/receipt/delete", { data: { check_number } });
 };

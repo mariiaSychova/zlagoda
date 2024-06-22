@@ -13,7 +13,7 @@ export async function PUT(req: Request) {
       sum_total = ${data.sum_total},
       vat = ${data.vat}
     WHERE 
-      id = ${data.check_number}
+      check_number = '${data.check_number}'
   `);
 
   return Response.json({ message: "Receipt updated successfully" });

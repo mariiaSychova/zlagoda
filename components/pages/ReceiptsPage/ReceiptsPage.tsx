@@ -16,10 +16,27 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import {
   getAllReceiptsInnerRoute,
   createReceiptInnerRoute,
-  //updateReceipt,
-  //deleteReceipt,
+  updateReceiptInnerRoute,
+  deleteReceiptInnerRoute,
 } from "@/API/receipt";
-import { TReceipt, TSell } from "@/types";
+
+import { getAllCustomerCardsForDisplayInnerRoute } from "@/API/customer-card";
+import { getAllCashiersForDisplay } from "@/API/employee";
+import {
+  getAllSalesForReceiptInnerRoute,
+  createSaleInnerRoute,
+  updateSaleInnerRoute,
+  deleteSaleInnerRoute,
+} from "@/API/sale";
+
+import {
+  TCustomerCardForDisplay,
+  TEmployeeForDisplay,
+  TReceipt,
+  TSell,
+} from "@/types";
+
+import { formatValue } from "@/utils/formatNumber";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -32,34 +49,9 @@ const validateReceipt = (
 ): { [key: string]: string } => {
   const newErrors: { [key: string]: string } = {};
 
-  if (!receipt.check_number) {
-    newErrors.check_number = "Check number is required.";
-  }
-
   if (!receipt.id_employee) {
-    newErrors.id_employee = "Employee ID is required.";
+    newErrors.id_employee = "Це поле обов'язкове";
   }
-
-  if (!receipt.print_date) {
-    newErrors.print_date = "Print date is required.";
-  }
-
-  if (receipt.sum_total === undefined || receipt.sum_total === null) {
-    newErrors.sum_total = "Total sum is required.";
-  } else if (isNaN(receipt.sum_total)) {
-    newErrors.sum_total = "Total sum must be a number.";
-  } else if (receipt.sum_total <= 0) {
-    newErrors.sum_total = "Total sum must be a positive number.";
-  }
-
-  if (receipt.vat === undefined || receipt.vat === null) {
-    newErrors.vat = "VAT is required.";
-  } else if (isNaN(receipt.vat)) {
-    newErrors.vat = "VAT must be a number.";
-  } else if (receipt.vat < 0) {
-    newErrors.vat = "VAT cannot be negative.";
-  }
-
   return newErrors;
 };
 
@@ -69,6 +61,10 @@ const ReceiptsPage = () => {
     Record<string, string | undefined>
   >({});
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [cashiers, setCashiers] = useState<TEmployeeForDisplay[]>([]);
+  const [customersCards, setCustomersCards] = useState<
+    TCustomerCardForDisplay[]
+  >([]);
 
   useEffect(() => {
     const fetchReceipts = async () => {
@@ -76,6 +72,22 @@ const ReceiptsPage = () => {
       setReceipts(data);
     };
     fetchReceipts();
+  }, []);
+
+  useEffect(() => {
+    const fetchCashiers = async () => {
+      const data = await getAllCashiersForDisplay();
+      setCashiers(data);
+    };
+    fetchCashiers();
+  }, []);
+
+  useEffect(() => {
+    const fetchCustomersCards = async () => {
+      const data = await getAllCustomerCardsForDisplayInnerRoute();
+      setCustomersCards(data);
+    };
+    fetchCustomersCards();
   }, []);
 
   const columns = useMemo<MRT_ColumnDef<TReceipt>[]>(() => {
@@ -102,39 +114,73 @@ const ReceiptsPage = () => {
     return [
       {
         accessorKey: "check_number",
-        header: "Check Number",
+        header: "Номер чеку",
+        enableEditing: false,
         size: 160,
-        ...defaultColumnProps("check_number", true, !isEditing),
+        ...defaultColumnProps("check_number", true, false),
       },
       {
         accessorKey: "id_employee",
-        header: "Employee ID",
+        header: "ID Касира",
         size: 160,
-        ...defaultColumnProps("id_employee"),
+        muiEditTextFieldProps: {
+          required: true,
+          error: !!validationErrors?.["id_employee"],
+          helperText: validationErrors?.["id_employee"],
+          onFocus: () =>
+            setValidationErrors((prev) => ({
+              ...prev,
+              id_employee: undefined,
+            })),
+          select: true,
+        },
+        editSelectOptions: cashiers.map((cashier) => ({
+          value: cashier.id_employee,
+          text: `ID:${cashier.id_employee} | ${cashier.empl_surname} ${cashier.empl_name} ${cashier.empl_patronymic}`,
+        })),
       },
       {
         accessorKey: "card_number",
-        header: "Card Number",
+        header: "Номер картки клієнта",
         size: 160,
-        ...defaultColumnProps("card_number", false),
+        muiEditTextFieldProps: {
+          select: true,
+        },
+        editSelectOptions: customersCards.map((card) => ({
+          value: card.card_number,
+          text: `№${card.card_number} | ${card.cust_surname} ${
+            card.cust_name
+          } ${card.cust_patronymic || ""} | ${card.percent}%`,
+        })),
       },
       {
         accessorKey: "print_date",
-        header: "Print Date",
+        header: "Дата створення",
+        enableEditing: false,
         size: 160,
-        ...defaultColumnProps("print_date"),
+        ...defaultColumnProps("print_date", true, false),
       },
       {
         accessorKey: "sum_total",
-        header: "Total Sum",
+        header: "Загальна сума",
+        enableEditing: false,
         size: 140,
-        ...defaultColumnProps("sum_total"),
+        ...defaultColumnProps("sum_total", true, false),
+        Cell: ({ cell }) => {
+          const value = cell.getValue<number | string>();
+          return formatValue(value);
+        },
       },
       {
         accessorKey: "vat",
-        header: "VAT",
+        header: "ПДВ",
+        enableEditing: false,
         size: 140,
-        ...defaultColumnProps("vat"),
+        ...defaultColumnProps("vat", true, false),
+        Cell: ({ cell }) => {
+          const value = cell.getValue<number | string>();
+          return formatValue(value);
+        },
       },
     ];
   }, [validationErrors, isEditing]);
@@ -152,25 +198,24 @@ const ReceiptsPage = () => {
       setReceipts(await getAllReceiptsInnerRoute());
     };
 
-  // const handleSaveReceipt: MRT_TableOptions<TReceipt>["onEditingRowSave"] =
-  //   async ({ values, table }) => {
-  //     const errors = validateReceipt(values);
-  //     if (Object.keys(errors).length) {
-  //       setValidationErrors(errors);
-  //       return;
-  //     }
+  const handleSaveReceipt: MRT_TableOptions<TReceipt>["onEditingRowSave"] =
+    async ({ values, table }) => {
+      const errors = validateReceipt(values);
+      if (Object.keys(errors).length) {
+        setValidationErrors(errors);
+        return;
+      }
 
-  //     await updateReceipt(values.check_number, values);
-  //     table.setEditingRow(null);
-  //     setReceipts(await getAllReceipts());
-  //   };
+      await updateReceiptInnerRoute(values);
+      table.setEditingRow(null);
+      setReceipts(await getAllReceiptsInnerRoute());
+    };
 
   const handleDeleteReceipt = async (row: MRT_Row<TReceipt>) => {
-    console.log(row.original);
-    // if (window.confirm("Are you sure you want to delete this receipt?")) {
-    //   await deleteReceipt(row.original.check_number);
-    //   setReceipts(await getAllReceipts());
-    // }
+    if (window.confirm("Are you sure you want to delete this receipt?")) {
+      await deleteReceiptInnerRoute(row.original.check_number);
+      setReceipts(await getAllReceiptsInnerRoute());
+    }
   };
 
   const handleExportRows = (rows: MRT_Row<TReceipt>[]) => {
@@ -181,7 +226,6 @@ const ReceiptsPage = () => {
     const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
 
     const docDefinition = {
-      pageOrientation: "landscape" as PageOrientation,
       header: {
         text: `Receipt Report - ${new Date().toLocaleDateString()}`,
         fontSize: 12,
@@ -194,10 +238,10 @@ const ReceiptsPage = () => {
         {
           table: {
             headerRows: 1,
-            widths: ["15%", "15%", "10%", "10%", "10%", "10%"],
+            widths: ["15%", "10%", "10%", "20%", "15%", "15%"],
             body: [tableHeaders, ...tableData],
           },
-          fontSize: 8,
+          fontSize: 10,
         },
       ],
     };
@@ -224,7 +268,7 @@ const ReceiptsPage = () => {
     enableEditing: true,
     getRowId: (row) => row.check_number,
     onCreatingRowSave: handleCreateReceipt,
-    //onEditingRowSave: handleSaveReceipt,
+    onEditingRowSave: handleSaveReceipt,
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "1rem" }}>
         <Tooltip title="Edit">
@@ -257,14 +301,14 @@ const ReceiptsPage = () => {
             setValidationErrors({});
           }}
         >
-          Add Receipt
+          додати
         </Button>
         <Button
           variant="contained"
           startIcon={<FileDownloadIcon />}
           onClick={() => handleExportRows(table.getRowModel().rows)}
         >
-          Export Page
+          Експорт сторінки
         </Button>
         <Button
           variant="contained"
@@ -273,7 +317,7 @@ const ReceiptsPage = () => {
             handleExportRows(table.getPrePaginationRowModel().rows)
           }
         >
-          Export All
+          Експорт всіх
         </Button>
       </Box>
     ),
