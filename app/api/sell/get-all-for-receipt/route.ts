@@ -9,7 +9,6 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
     });
   }
-
   const sales = await executeDBQuery(`
     SELECT * FROM public.sale
     WHERE check_number = '${check_number}'

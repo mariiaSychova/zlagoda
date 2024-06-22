@@ -22,18 +22,11 @@ import {
 
 import { getAllCustomerCardsForDisplayInnerRoute } from "@/API/customer-card";
 import { getAllCashiersForDisplay } from "@/API/employee";
-import {
-  getAllSalesForReceiptInnerRoute,
-  createSaleInnerRoute,
-  updateSaleInnerRoute,
-  deleteSaleInnerRoute,
-} from "@/API/sale";
 
 import {
   TCustomerCardForDisplay,
   TEmployeeForDisplay,
   TReceipt,
-  TSell,
 } from "@/types";
 
 import { formatValue } from "@/utils/formatNumber";
@@ -43,6 +36,8 @@ import pdfFonts from "pdfmake/build/vfs_fonts";
 import { PageOrientation } from "pdfmake/interfaces";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+import SalesTable from "./SalesTable";
 
 const validateReceipt = (
   receipt: Partial<TReceipt>
@@ -60,11 +55,13 @@ const ReceiptsPage = () => {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [cashiers, setCashiers] = useState<TEmployeeForDisplay[]>([]);
   const [customersCards, setCustomersCards] = useState<
     TCustomerCardForDisplay[]
   >([]);
+  const [selectedCheckNumber, setSelectedCheckNumber] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchReceipts = async () => {
@@ -90,7 +87,7 @@ const ReceiptsPage = () => {
     fetchCustomersCards();
   }, []);
 
-  const columns = useMemo<MRT_ColumnDef<TReceipt>[]>(() => {
+  const columnsReceipt = useMemo<MRT_ColumnDef<TReceipt>[]>(() => {
     const defaultColumnProps = (
       field: string,
       required: boolean = true,
@@ -183,7 +180,7 @@ const ReceiptsPage = () => {
         },
       },
     ];
-  }, [validationErrors, isEditing]);
+  }, [validationErrors, cashiers, customersCards]);
 
   const handleCreateReceipt: MRT_TableOptions<TReceipt>["onCreatingRowSave"] =
     async ({ values, table }) => {
@@ -223,7 +220,9 @@ const ReceiptsPage = () => {
       rows.map((row) => Object.values(row.original))
     );
 
-    const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
+    const tableHeaders = sanitizeData([
+      columnsReceipt.map((c) => c.header || ""),
+    ])[0];
 
     const docDefinition = {
       header: {
@@ -261,12 +260,22 @@ const ReceiptsPage = () => {
   };
 
   const ReceiptTable = useMaterialReactTable({
-    columns,
+    columns: columnsReceipt,
     data: receipts,
     createDisplayMode: "modal",
     editDisplayMode: "modal",
     enableEditing: true,
     getRowId: (row) => row.check_number,
+    enableRowSelection: true,
+    onRowSelectionChange: (updater) => {
+      const rowSelection =
+        typeof updater === "function" ? updater({}) : updater;
+      const selectedRowId = Object.keys(rowSelection)[0];
+      const selectedRow = receipts.find(
+        (receipt) => receipt.check_number === selectedRowId
+      );
+      setSelectedCheckNumber(selectedRow ? selectedRow.check_number : null);
+    },
     onCreatingRowSave: handleCreateReceipt,
     onEditingRowSave: handleSaveReceipt,
     renderRowActions: ({ row, table }) => (
@@ -275,7 +284,6 @@ const ReceiptsPage = () => {
           <IconButton
             onClick={() => {
               table.setEditingRow(row);
-              setIsEditing(true);
               setValidationErrors({});
             }}
           >
@@ -297,7 +305,6 @@ const ReceiptsPage = () => {
           variant="contained"
           onClick={() => {
             table.setCreatingRow(true);
-            setIsEditing(false);
             setValidationErrors({});
           }}
         >
@@ -310,23 +317,17 @@ const ReceiptsPage = () => {
         >
           Експорт сторінки
         </Button>
-        <Button
-          variant="contained"
-          startIcon={<FileDownloadIcon />}
-          onClick={() =>
-            handleExportRows(table.getPrePaginationRowModel().rows)
-          }
-        >
-          Експорт всіх
-        </Button>
       </Box>
     ),
   });
 
   return (
-    <Box sx={{ marginTop: "20px" }}>
+    <div>
       <MaterialReactTable table={ReceiptTable} />
-    </Box>
+      {selectedCheckNumber && (
+        <SalesTable selectedCheckNumber={selectedCheckNumber} />
+      )}
+    </div>
   );
 };
 

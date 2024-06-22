@@ -100,6 +100,16 @@ export type TStoreProduct_Optional = {
   promotional_product?: boolean;
 };
 
+export type TStoreProductForDisplay = {
+  upc_prom: string;
+  id_product: number;
+  product_name: string;
+  producer: string;
+  selling_price: number;
+  products_number: number;
+  promotional_product: boolean;
+};
+
 export type TSell = {
   upc: string;
   check_number: string;
