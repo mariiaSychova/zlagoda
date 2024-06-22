@@ -11,3 +11,13 @@ export const createReceiptInnerRoute = async (
 ): Promise<void> => {
   await axios.post("/api/receipt/create", data);
 };
+
+export const updateReceiptInnerRoute = async (
+  data: TReceipt
+): Promise<void> => {
+  await axios.put("/api/receipt/update", data);
+};
+
+export const deleteReceiptInnerRoute = async (id: string): Promise<void> => {
+  await axios.delete("/api/receipt/delete", { data: { id } });
+};
