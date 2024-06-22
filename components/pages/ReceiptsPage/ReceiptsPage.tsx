@@ -260,7 +260,7 @@ const ReceiptsPage = () => {
     });
   };
 
-  const table = useMaterialReactTable({
+  const ReceiptTable = useMaterialReactTable({
     columns,
     data: receipts,
     createDisplayMode: "modal",
@@ -325,7 +325,7 @@ const ReceiptsPage = () => {
 
   return (
     <Box sx={{ marginTop: "20px" }}>
-      <MaterialReactTable table={table} />
+      <MaterialReactTable table={ReceiptTable} />
     </Box>
   );
 };
