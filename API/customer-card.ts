@@ -38,3 +38,12 @@ export const getAllCustomerCardsForDisplayInnerRoute = async (): Promise<
 
   return data.data;
 };
+
+export const getCustomerDiscountByNumInnerRoute = async (
+  card_number: string
+): Promise<any> => {
+  const response = await axios.post("/api/customer-card/get-discount-by-num", {
+    card_number,
+  });
+  return response.data;
+};

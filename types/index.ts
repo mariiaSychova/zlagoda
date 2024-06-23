@@ -101,13 +101,12 @@ export type TStoreProduct_Optional = {
 };
 
 export type TStoreProductForDisplay = {
-  upc_prom: string;
-  id_product: number;
+  upc: string;
   product_name: string;
   producer: string;
-  selling_price: number;
+  characteristics: string;
   products_number: number;
-  promotional_product: boolean;
+  selling_price: number;
 };
 
 export type TSell = {

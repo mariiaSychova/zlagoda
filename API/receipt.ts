@@ -31,3 +31,10 @@ export const deleteReceiptInnerRoute = async (
 ): Promise<void> => {
   await axios.delete("/api/receipt/delete", { data: { check_number } });
 };
+
+export const getReceiptByNumInnerRoute = async (
+  checkNumber: string
+): Promise<TReceipt> => {
+  const response = await axios.post("/api/receipt/get-by-num", { checkNumber });
+  return response.data;
+};

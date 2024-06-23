@@ -63,11 +63,12 @@ const ReceiptsPage = () => {
     null
   );
 
+  const fetchReceipts = async () => {
+    const data = await getAllReceiptsInnerRoute();
+    setReceipts(data);
+  };
+
   useEffect(() => {
-    const fetchReceipts = async () => {
-      const data = await getAllReceiptsInnerRoute();
-      setReceipts(data);
-    };
     fetchReceipts();
   }, []);
 
@@ -192,7 +193,7 @@ const ReceiptsPage = () => {
 
       await createReceiptInnerRoute(values);
       table.setCreatingRow(null);
-      setReceipts(await getAllReceiptsInnerRoute());
+      await fetchReceipts();
     };
 
   const handleSaveReceipt: MRT_TableOptions<TReceipt>["onEditingRowSave"] =
@@ -205,13 +206,13 @@ const ReceiptsPage = () => {
 
       await updateReceiptInnerRoute(values);
       table.setEditingRow(null);
-      setReceipts(await getAllReceiptsInnerRoute());
+      await fetchReceipts();
     };
 
   const handleDeleteReceipt = async (row: MRT_Row<TReceipt>) => {
     if (window.confirm("Are you sure you want to delete this receipt?")) {
       await deleteReceiptInnerRoute(row.original.check_number);
-      setReceipts(await getAllReceiptsInnerRoute());
+      await fetchReceipts();
     }
   };
 
@@ -325,7 +326,10 @@ const ReceiptsPage = () => {
     <div>
       <MaterialReactTable table={ReceiptTable} />
       {selectedCheckNumber && (
-        <SalesTable selectedCheckNumber={selectedCheckNumber} />
+        <SalesTable
+          selectedCheckNumber={selectedCheckNumber}
+          onUpdateReceipts={fetchReceipts}
+        />
       )}
     </div>
   );
