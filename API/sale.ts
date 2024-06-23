@@ -24,3 +24,10 @@ export const deleteSaleInnerRoute = async (
 ): Promise<void> => {
   await axios.delete("/api/sell/delete", { data: { upc, check_number } });
 };
+
+
+export const checkIfProductInSell = async (upc: string): Promise<boolean> => {
+  const response = await axios.post("/api/sell/is-product-in-sell", { upc });
+  console.log(response);
+  return response.data.exists;
+};
