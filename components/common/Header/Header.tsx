@@ -16,6 +16,11 @@ const Header = () => {
     { href: "/checks", name: "Чеки" },
     { href: "/customer-cards", name: "Карти клієнтів" },
     ...(isAdmin ? [{ href: "/employees", name: "Працівники" }] : []),
+    { href: "/mariia-1", name: "Mariia 1" },
+    {
+      href: "/mariia-2",
+      name: "Mariia 2",
+    },
   ];
 
   const redirect = (url: string) => {

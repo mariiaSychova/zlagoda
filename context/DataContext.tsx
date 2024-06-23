@@ -9,6 +9,16 @@ import {
   updateProductInnerRoute,
 } from "@/API/products";
 import {
+  TCategory,
+  TCategory_Optional,
+  TCustomerCard,
+  TCustomerCard_Optional,
+  TMariia_1,
+  TMariia_2,
+  TProduct,
+  TProduct_Optional,
+} from "@/types";
+import {
   createCategoryInnerRoute,
   deleteCategoryInnerRoute,
   getAllCategoriesInnerRoute,
@@ -20,14 +30,7 @@ import {
   updateCustomerCardInnerRoute,
   deleteCustomerCardInnerRoute,
 } from "@/API/customer-card";
-import {
-  TCategory,
-  TCategory_Optional,
-  TProduct,
-  TProduct_Optional,
-  TCustomerCard,
-  TCustomerCard_Optional,
-} from "@/types";
+import { getMariia1InnerRoute, getMariia2InnerRoute } from "@/API/mariia";
 
 type FetchType = {
   isLoading: boolean;
@@ -49,6 +52,10 @@ type FetchType = {
     v: TCustomerCard_Optional
   ) => Promise<void>;
   deleteCustomerCard: (card_number: string) => Promise<void>;
+
+  mariia_1: TMariia_1[];
+  mariia_2: TMariia_2[];
+  fetchMariia_2: (v: string) => void;
 };
 
 export const DataContext = React.createContext<FetchType>({
@@ -68,6 +75,10 @@ export const DataContext = React.createContext<FetchType>({
   createCustomerCard: () => new Promise(() => {}),
   updateCustomerCard: () => new Promise(() => {}),
   deleteCustomerCard: () => new Promise(() => {}),
+
+  mariia_1: [],
+  mariia_2: [],
+  fetchMariia_2: () => {},
 });
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
@@ -78,14 +89,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<TCategory[]>([]);
   const [customerCards, setCustomerCards] = useState<TCustomerCard[]>([]);
 
+  // Mariia
+  const [mariia_1, setMariia_1] = useState<TMariia_1[]>([]);
+  const [mariia_2, setMariia_2] = useState<TMariia_2[]>([]);
+
   useEffect(() => {
     Promise.all([
       fetchProducts(),
       fetchCategories(),
+      fetchMariia_1(),
       fetchCustomerCards(),
     ]).then(() => setIsLoading(false));
   }, []);
-
   // PRODUCTS
   const fetchProducts = async () => {
     await getAllProductsInnerRoute().then((res) => setProducts(res));
@@ -158,6 +173,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   };
 
+  // MARIIA
+  const fetchMariia_1 = async () => {
+    await getMariia1InnerRoute().then((res) => setMariia_1(res));
+  };
+  const fetchMariia_2 = async (category_name: string) => {
+    await getMariia2InnerRoute(category_name).then((res) => setMariia_2(res));
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -177,6 +200,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         createCustomerCard,
         updateCustomerCard,
         deleteCustomerCard,
+
+        mariia_1,
+        mariia_2,
+        fetchMariia_2,
       }}
     >
       {isReady ? children : null}
