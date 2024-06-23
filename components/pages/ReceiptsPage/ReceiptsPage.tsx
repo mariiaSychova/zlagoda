@@ -336,7 +336,7 @@ const ReceiptsPage = () => {
   });
 
   return (
-    <div>
+    <Box sx={{ marginTop: "20px"}}>
       <MaterialReactTable table={ReceiptTable} />
       {selectedCheckNumber && (
         <SalesTable
@@ -344,7 +344,7 @@ const ReceiptsPage = () => {
           onUpdateReceipts={fetchReceipts}
         />
       )}
-    </div>
+      </Box>
   );
 };
 

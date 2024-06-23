@@ -448,7 +448,7 @@ const EmployeePage = () => {
 
   return (
     <Box sx={{ marginTop: "20px" }}>
-      <MaterialReactTable table={table} />;
+      <MaterialReactTable table={table} />
     </Box>
   );
 };
