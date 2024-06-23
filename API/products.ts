@@ -17,7 +17,7 @@ export const updateProductInnerRoute = async (
   id: number,
   data: TProduct_Optional
 ): Promise<void> => {
-  await axios.post("/api/products/create", { id, data });
+  await axios.post("/api/products/update", { id, data });
 };
 
 export const deleteProductInnerRoute = async (id: number): Promise<void> => {

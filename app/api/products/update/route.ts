@@ -2,8 +2,8 @@ import { TProduct_Optional } from "@/types";
 import { executeDBQuery } from "@/utils/db";
 
 export async function POST(req: Request) {
-  const { id_product, data } = (await req.json()) as {
-    id_product: number;
+  const { id, data } = (await req.json()) as {
+    id: number;
     data: TProduct_Optional;
   };
 
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     .join(", ");
 
   await executeDBQuery(`
-        UPDATE public.product SET ${updates} WHERE id_product = '${id_product}'
+        UPDATE public.product SET ${updates} WHERE id_product = '${id}'
         `);
 
   return Response.json({ message: "Product updated successfully" });
