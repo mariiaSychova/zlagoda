@@ -2,7 +2,7 @@ import { executeDBQuery } from "@/utils/db";
 
 export async function GET(req: Request) {
   const result =
-    await executeDBQuery(`SELECT C.card_number, C.cust_name, C.cust_surname,
+    await executeDBQuery(`SELECT C.card_number, C.cust_name, C.cust_surname, C.cust_patronymic,
 	(SELECT SUM(R.sum_total)
 	FROM public.receipt AS R
 	WHERE R.card_number = C.card_number) AS TotalAmountSpent,

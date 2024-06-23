@@ -13,6 +13,7 @@ const page = () => {
 
       <CustomerCardTable
         customerCards={mariia_1 as any}
+        type={"mariia-1"}
         editingCardNumber={null}
         errors={{}}
         handleEdit={() => {}}

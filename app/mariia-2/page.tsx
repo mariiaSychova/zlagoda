@@ -17,6 +17,7 @@ const page = () => {
           {categories.map((category) => (
             <div
               key={category.category_number}
+              className="category"
               onClick={() => fetchMariia_2(category.category_name)}
             >
               {category.category_name}
@@ -30,8 +31,8 @@ const page = () => {
               <ProductItem
                 item={{
                   ...el,
-                  id_product: -1,
-                  category_number: -1,
+                  id_product: 0,
+                  category_number: 0,
                   producer: "",
                 }}
                 state={"default"}

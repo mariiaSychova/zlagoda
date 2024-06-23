@@ -1,66 +1,67 @@
 header {
-    width: 100%;
+  width: 100%;
 
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 48px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 48px;
 }
 
 .logo {
-    cursor: pointer;
+  cursor: pointer;
 
-    font-size: 24px;
-    font-weight: bold;
-    color: coral;
+  font-size: 24px;
+  font-weight: bold;
+  color: coral;
 }
 
 .menu {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
 
-    .menu-item {
-        position: relative;
-        cursor: pointer;
+  .menu-item {
+    position: relative;
+    cursor: pointer;
 
-        &::before {
-            content: "";
+    &::before {
+      content: "";
 
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            transition: all 0.3s ease-in-out;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      transition: all 0.3s ease-in-out;
 
-            width: 0;
-            height: 1px;
-            background: gray;
-        }
-
-        &:hover,
-        &.active {
-            &::before {
-                width: 100%;
-            }
-        }
-
-        &.active {
-            font-weight: bold;
-        }
+      width: 0;
+      height: 1px;
+      background: gray;
     }
+
+    &:hover,
+    &.active {
+      &::before {
+        width: 100%;
+      }
+    }
+
+    &.active {
+      font-weight: bold;
+    }
+  }
 }
 
 .account {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 
-    background: gray;
+  background: gray;
 
-    outline: 1px solid gray;
-    outline-offset: 2px;
-    cursor: pointer;
+  outline: 1px solid gray;
+  outline-offset: 2px;
+  cursor: pointer;
 }

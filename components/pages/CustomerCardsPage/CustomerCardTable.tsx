@@ -21,6 +21,7 @@ type Props = {
     cardNumber: string,
     key: keyof TCustomerCard
   ) => void;
+  type?: "default" | "mariia-1";
 };
 
 const CustomerCardTable: React.FC<Props> = ({
@@ -31,9 +32,10 @@ const CustomerCardTable: React.FC<Props> = ({
   handleDelete,
   handleSave,
   handleChange,
+  type = "default",
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const columns: MRT_ColumnDef<TCustomerCard>[] = [
+  const columns: MRT_ColumnDef<any>[] = [
     {
       accessorKey: "card_number",
       header: "Card Number",
@@ -234,10 +236,70 @@ const CustomerCardTable: React.FC<Props> = ({
           </>
         ),
     },
+    {
+      accessorKey: "numberofitemsbought",
+      header: "Number Of Items Bought",
+      Cell: ({ cell }) =>
+        editingCardNumber === cell.row.original.numberofitemsbought ? (
+          <TextField value={cell.getValue<string>() || ""} size="small" />
+        ) : (
+          cell.getValue<string>() || "N/A"
+        ),
+    },
+    {
+      accessorKey: "totalamountspent",
+      header: "Total Amount Spent",
+      Cell: ({ cell }) =>
+        editingCardNumber === cell.row.original.totalamountspent ? (
+          <TextField value={cell.getValue<string>() || ""} size="small" />
+        ) : (
+          cell.getValue<string>() || "N/A"
+        ),
+    },
   ];
 
+  const keys_default = [
+    "card_number",
+    "cust_surname",
+    "cust_name",
+    "cust_patronymic",
+    "phone_number",
+    "city",
+    "street",
+    "zip_code",
+    "percent",
+    "actions",
+  ];
+  const keys_mariia_1 = [
+    "card_number",
+    "cust_surname",
+    "cust_name",
+    "cust_patronymic",
+    "numberofitemsbought",
+    "totalamountspent",
+  ];
+
+  const getColumnsByKeys = (keys: string[]) => {
+    return columns.filter(
+      (column) =>
+        typeof column.accessorKey === "string" &&
+        keys.includes(column.accessorKey)
+    );
+  };
+
+  const getKeysFromType = () => {
+    switch (type) {
+      case "default":
+        return keys_default;
+      case "mariia-1":
+        return keys_mariia_1;
+      default:
+        return keys_default;
+    }
+  };
+
   const table = useMaterialReactTable({
-    columns,
+    columns: getColumnsByKeys(getKeysFromType()),
     data: customerCards,
     enableColumnOrdering: true,
   });
