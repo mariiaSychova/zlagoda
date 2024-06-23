@@ -16,10 +16,10 @@ const Header = () => {
     { href: "/checks", name: "Чеки" },
     { href: "/customer-cards", name: "Карти клієнтів" },
     ...(isAdmin ? [{ href: "/employees", name: "Працівники" }] : []),
-    { href: "/mariia-1", name: "Mariia 1" },
+    { href: "/mariia-1", name: "Загальна сума і кількість покупок клієнтів" },
     {
       href: "/mariia-2",
-      name: "Mariia 2",
+      name: "Неакційні товари, що не належать певній категорії",
     },
   ];
 

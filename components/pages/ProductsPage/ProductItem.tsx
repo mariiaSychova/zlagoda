@@ -150,11 +150,13 @@ const ProductItem: FC<Props> = ({ item, state }) => {
 
   return (
     <div className="item product-item">
-      <span>Id: {item.id_product}</span>
+      {item.id_product ? <span>Id: {item.id_product}</span> : null}
       <span>Name: {item.product_name}</span>
-      <span>Category: {item.category_number}</span>
+      {item.category_number ? (
+        <span>Category: {item.category_number}</span>
+      ) : null}
       <span>Characteristics: {item.characteristics}</span>
-      <span>Producer: {item.producer}</span>
+      {item.producer ? <span>Producer: {item.producer}</span> : null}
 
       {renderControlBtns()}
     </div>
