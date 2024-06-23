@@ -9,7 +9,13 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 
-import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Tooltip,
+  CircularProgress,
+} from "@mui/material";
 import { TCustomerCard } from "@/types/index";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -26,8 +32,6 @@ import {
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { PageOrientation } from "pdfmake/interfaces";
-//import { jsPDF } from "jspdf";
-//import autoTable from "jspdf-autotable";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const validateCard = (
@@ -80,6 +84,10 @@ const validateCard = (
   return newErrors;
 };
 
+const simulateLongLoad = (delay = 1000) => {
+  return new Promise((resolve) => setTimeout(resolve, delay));
+};
+
 const CustomerCardsPage = () => {
   const [customerCards, setCustomerCards] = useState<TCustomerCard[]>([]);
   const [validationErrors, setValidationErrors] = useState<
@@ -87,12 +95,18 @@ const CustomerCardsPage = () => {
   >({});
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const fetchCustomerCards = async () => {
+    await simulateLongLoad(3000);
+    const cards = await getAllCustomerCardsInnerRoute();
+    setCustomerCards(cards);
+  };
+
   useEffect(() => {
-    const fetchCustomerCards = async () => {
-      const cards = await getAllCustomerCardsInnerRoute();
-      setCustomerCards(cards);
-    };
+    setIsLoading(true);
     fetchCustomerCards();
+    setIsLoading(false);
   }, []);
 
   const columns = useMemo<MRT_ColumnDef<TCustomerCard>[]>(() => {
@@ -174,37 +188,45 @@ const CustomerCardsPage = () => {
 
   const handleCreateCustomerCard: MRT_TableOptions<TCustomerCard>["onCreatingRowSave"] =
     async ({ values, table }) => {
+      setIsLoading(true);
       const errors = validateCard(values, customerCards);
       if (Object.keys(errors).length) {
         setValidationErrors(errors);
+        setIsLoading(false);
         return;
       }
 
       await createCustomerCardInnerRoute(values);
       table.setCreatingRow(null);
-      setCustomerCards(await getAllCustomerCardsInnerRoute());
+      fetchCustomerCards();
+      setIsLoading(false);
     };
 
   const handleSaveCustomerCard: MRT_TableOptions<TCustomerCard>["onEditingRowSave"] =
     async ({ values, table }) => {
+      setIsLoading(true);
       const errors = validateCard(
         values,
         customerCards.filter((card) => card.card_number !== values.card_number)
       );
       if (Object.keys(errors).length) {
         setValidationErrors(errors);
+        setIsLoading(false);
         return;
       }
 
       await updateCustomerCardInnerRoute(values.card_number, values);
       table.setEditingRow(null);
-      setCustomerCards(await getAllCustomerCardsInnerRoute());
+      fetchCustomerCards();
+      setIsLoading(false);
     };
 
   const handleDeleteCustomerCard = async (row: MRT_Row<TCustomerCard>) => {
     if (window.confirm("Ви впевнені щодо видалення?")) {
+      setIsLoading(true);
       await deleteCustomerCardInnerRoute(row.original.card_number);
-      setCustomerCards(await getAllCustomerCardsInnerRoute());
+      fetchCustomerCards();
+      setIsLoading(false);
     }
   };
 
@@ -331,7 +353,18 @@ const CustomerCardsPage = () => {
 
   return (
     <Box sx={{ marginTop: "20px" }}>
-      <MaterialReactTable table={table} />;
+      {isLoading ? (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+        >
+          <CircularProgress />
+        </Box>
+      ) : (
+        <MaterialReactTable table={table} />
+      )}
     </Box>
   );
 };

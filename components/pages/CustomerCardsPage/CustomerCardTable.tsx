@@ -1,13 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   MaterialReactTable,
   useMaterialReactTable,
   type MRT_ColumnDef,
 } from "material-react-table";
 import { TCustomerCard } from "@/types";
-import { Box, TextField, Button } from "@mui/material";
+import { TextField, Button, CircularProgress, Box } from "@mui/material";
 
 type Props = {
   customerCards: TCustomerCard[];
@@ -32,6 +32,7 @@ const CustomerCardTable: React.FC<Props> = ({
   handleSave,
   handleChange,
 }) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const columns: MRT_ColumnDef<TCustomerCard>[] = [
     {
       accessorKey: "card_number",
@@ -192,7 +193,11 @@ const CustomerCardTable: React.FC<Props> = ({
       Cell: ({ cell }) =>
         editingCardNumber === cell.row.original.card_number ? (
           <Button
-            onClick={() => handleSave(cell.row.original.card_number)}
+            onClick={() => {
+              setIsLoading(true);
+              handleSave(cell.row.original.card_number);
+              setIsLoading(false);
+            }}
             variant="contained"
             color="success"
             size="small"
@@ -202,7 +207,11 @@ const CustomerCardTable: React.FC<Props> = ({
         ) : (
           <>
             <Button
-              onClick={() => handleEdit(cell.row.original.card_number)}
+              onClick={() => {
+                setIsLoading(true);
+                handleEdit(cell.row.original.card_number);
+                setIsLoading(false);
+              }}
               variant="contained"
               color="primary"
               size="small"
@@ -211,7 +220,11 @@ const CustomerCardTable: React.FC<Props> = ({
               Edit
             </Button>
             <Button
-              onClick={() => handleDelete(cell.row.original.card_number)}
+              onClick={() => {
+                setIsLoading(true);
+                handleDelete(cell.row.original.card_number);
+                setIsLoading(false);
+              }}
               variant="contained"
               color="error"
               size="small"
@@ -229,7 +242,22 @@ const CustomerCardTable: React.FC<Props> = ({
     enableColumnOrdering: true,
   });
 
-  return <MaterialReactTable table={table} />;
+  return (
+    <Box>
+      {isLoading ? (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+        >
+          <CircularProgress />
+        </Box>
+      ) : (
+        <MaterialReactTable table={table} />
+      )}
+    </Box>
+  );
 };
 
 export default CustomerCardTable;
