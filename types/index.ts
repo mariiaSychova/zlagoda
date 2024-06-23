@@ -36,6 +36,13 @@ export type TEmployee = {
   password?: string;
 };
 
+export type TEmployeeForDisplay = {
+  id_employee: number;
+  empl_surname: string;
+  empl_name: string;
+  empl_patronymic?: string;
+};
+
 export type TCategory = {
   category_number: number;
   category_name: string;
@@ -68,6 +75,14 @@ export type TCustomerCard_Optional = {
   percent?: number;
 };
 
+export type TCustomerCardForDisplay = {
+  card_number: string;
+  cust_surname: string;
+  cust_name: string;
+  cust_patronymic?: string;
+  percent: number;
+};
+
 export type TStoreProduct = {
   upc: string;
   upc_prom?: string;
@@ -84,6 +99,16 @@ export type TStoreProduct_Optional = {
   products_number?: number;
   promotional_product?: boolean;
 };
+
+
+export type TStoreProductForDisplay = {
+  upc: string;
+  product_name: string;
+  producer: string;
+  characteristics: string;
+  products_number: number;
+  selling_price: number;
+}
 
 export type TMariia_1 = {
   card_number: number;
@@ -110,5 +135,4 @@ export type TReceipt = {
   print_date: string;
   sum_total: number;
   vat: number;
-  products: TSell[];
 };

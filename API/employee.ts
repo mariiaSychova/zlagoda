@@ -1,4 +1,4 @@
-import { TEmployee } from "@/types";
+import { TEmployee, TEmployeeForDisplay } from "@/types";
 import axios from "axios";
 import { formatDate, parseDate } from "@/utils/formatDate";
 
@@ -45,4 +45,15 @@ export const deleteEmployeeInnerRoute = async (
   id_employee: string
 ): Promise<void> => {
   await axios.post("/api/employee/delete", { id_employee });
+};
+
+export const getAllCashiersForDisplay = async (): Promise<
+  TEmployeeForDisplay[]
+> => {
+  const response = await axios.get(
+    "/api/employee/get-all-cashiers-for-display"
+  );
+  const employees = response.data as TEmployee[];
+
+  return employees;
 };

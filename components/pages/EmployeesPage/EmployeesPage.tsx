@@ -350,9 +350,7 @@ const EmployeePage = () => {
         },
       ],
     };
-
-    const name: string =
-      "employees_report" + new Date().toLocaleDateString() + ".pdf";
+    const name: string = `employees_report_${new Date().toLocaleDateString()}.pdf`;
     pdfMake.createPdf(docDefinition).download(name);
   };
 
