@@ -54,7 +54,7 @@ const validateSell = (sell: Partial<TSell>): { [key: string]: string } => {
 
 interface SalesTableProps {
   selectedCheckNumber: string | "";
-  onUpdateReceipts: () => void;
+  onUpdateReceipts: (updating: boolean) => void;
 }
 
 const SalesTable: React.FC<SalesTableProps> = ({
@@ -67,16 +67,20 @@ const SalesTable: React.FC<SalesTableProps> = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const fetchSales = async () => {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const fetchSales = async (reload: boolean) => {
     if (selectedCheckNumber) {
+      if (reload) setIsLoading(true);
       const data = await getAllSalesForReceiptInnerRoute(selectedCheckNumber);
       setSells(data);
+      if (reload) setIsLoading(false);
     } else {
       setSells([]);
     }
   };
   useEffect(() => {
-    fetchSales();
+    fetchSales(true);
   }, [selectedCheckNumber]);
 
   useEffect(() => {
@@ -92,10 +96,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
     sell: TSell,
     operation: "add" | "update" | "delete"
   ) => {
+    setIsSaving(true);
     const receipt: TReceipt = await getReceiptByNumInnerRoute(checkNumber);
     const product = products.find((p) => p.upc === sell.upc);
 
     if (!product) {
+      setIsSaving(false);
       throw new Error("Product not found");
     }
 
@@ -103,6 +109,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
       operation !== "delete" &&
       sell.product_number > product.products_number
     ) {
+      setIsSaving(false);
       throw new Error("Insufficient product quantity in store");
     }
     const customerDiscountResponce = receipt.card_number
@@ -132,6 +139,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
         sell.upc,
         product.products_number - productNumber
       );
+      setIsSaving(false);
     }
 
     if (operation === "delete") {
@@ -246,11 +254,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
       values.selling_price = price;
       values.check_number = selectedCheckNumber;
       try {
+        setIsSaving(true);
         await updateReceiptAndProduct(selectedCheckNumber, values, "add");
         await createSaleInnerRoute(values);
         table.setCreatingRow(null);
-        await fetchSales();
-        onUpdateReceipts();
+        await fetchSales(false);
+        onUpdateReceipts(true);
       } catch (error) {
         if (error instanceof Error) {
           alert(error.message);
@@ -258,6 +267,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
           console.error(error);
         }
       }
+      setIsSaving(false);
     };
 
   const handleSaveSell: MRT_TableOptions<TSell>["onEditingRowSave"] = async ({
@@ -271,11 +281,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
     }
 
     try {
+      setIsSaving(true);
       await updateReceiptAndProduct(selectedCheckNumber, values, "update");
       await updateSaleInnerRoute(values);
       table.setEditingRow(null);
-      await fetchSales();
-      onUpdateReceipts();
+      await fetchSales(false);
+      onUpdateReceipts(true);
     } catch (error) {
       if (error instanceof Error) {
         alert(error.message);
@@ -283,19 +294,21 @@ const SalesTable: React.FC<SalesTableProps> = ({
         console.error(error);
       }
     }
+    setIsSaving(false);
   };
 
   const handleDeleteSell = async (row: MRT_Row<TSell>) => {
     if (window.confirm("Are you sure you want to delete this sale?")) {
       try {
+        setIsSaving(true);
         await updateReceiptAndProduct(
           selectedCheckNumber,
           row.original,
           "delete"
         );
         await deleteSaleInnerRoute(row.original.upc, selectedCheckNumber);
-        await fetchSales();
-        onUpdateReceipts();
+        await fetchSales(false);
+        onUpdateReceipts(true);
       } catch (error) {
         if (error instanceof Error) {
           alert(error.message);
@@ -303,6 +316,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
           console.error(error);
         }
       }
+      setIsSaving(false);
     }
   };
 
@@ -337,6 +351,11 @@ const SalesTable: React.FC<SalesTableProps> = ({
         Додати
       </Button>
     ),
+    state: {
+      isLoading,
+      isSaving,
+      showProgressBars: isLoading || isSaving,
+    },
   });
 
   return <MaterialReactTable table={sellTable} />;

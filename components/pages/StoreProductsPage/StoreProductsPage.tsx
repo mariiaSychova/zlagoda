@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -86,18 +86,25 @@ const StoreProductsPage = () => {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const firstTimeRef = useRef(true);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [products, setProducts] = useState<TProductForDisplay[]>([]);
 
   useEffect(() => {
-    const fetchStoreProducts = async () => {
-      const data = await getAllStoreProductsInnerRoute();
-      setStoreProducts(data);
-    };
     fetchStoreProducts();
   }, []);
 
-  const [products, setProducts] = useState<TProductForDisplay[]>([]);
+  const fetchStoreProducts = async () => {
+    if (firstTimeRef.current) setIsLoading(true);
+    const data = await getAllStoreProductsInnerRoute();
+    setStoreProducts(data);
+    if (firstTimeRef.current) {
+      firstTimeRef.current = false;
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -225,10 +232,11 @@ const StoreProductsPage = () => {
         setValidationErrors(errors);
         return;
       }
-
+      setIsSaving(true);
       await createStoreProductInnerRoute(values);
       table.setCreatingRow(null);
-      setStoreProducts(await getAllStoreProductsInnerRoute());
+      fetchStoreProducts();
+      setIsSaving(false);
     };
 
   const handleSaveStoreProduct: MRT_TableOptions<TStoreProduct>["onEditingRowSave"] =
@@ -245,17 +253,20 @@ const StoreProductsPage = () => {
         setValidationErrors(errors);
         return;
       }
-
+      setIsSaving(true);
       await updateStoreProductInnerRoute(values.upc, values);
       table.setEditingRow(null);
-      setStoreProducts(await getAllStoreProductsInnerRoute());
+      fetchStoreProducts();
+      setIsSaving(false);
     };
 
   const handleDeleteStoreProduct = async (row: MRT_Row<TStoreProduct>) => {
     if (window.confirm("Ви впевнені щодо видалення?")) {
+      setIsSaving(true);
       await deleteStoreProductInnerRoute(row.original.upc);
 
-      setStoreProducts(await getAllStoreProductsInnerRoute());
+      fetchStoreProducts();
+      setIsSaving(false);
     }
   };
 
@@ -371,6 +382,11 @@ const StoreProductsPage = () => {
         </Button>
       </Box>
     ),
+    state: {
+      isLoading,
+      isSaving,
+      showProgressBars: isLoading || isSaving,
+    },
   });
 
   return (

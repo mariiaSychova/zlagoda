@@ -62,14 +62,18 @@ const ReceiptsPage = () => {
   const [selectedCheckNumber, setSelectedCheckNumber] = useState<string | null>(
     null
   );
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const fetchReceipts = async () => {
+  const fetchReceipts = async (updating: boolean) => {
+    if (updating) setIsLoading(true);
     const data = await getAllReceiptsInnerRoute();
     setReceipts(data);
+    if (updating) setIsLoading(false);
   };
 
   useEffect(() => {
-    fetchReceipts();
+    fetchReceipts(true);
   }, []);
 
   useEffect(() => {
@@ -190,10 +194,11 @@ const ReceiptsPage = () => {
         setValidationErrors(errors);
         return;
       }
-
+      setIsSaving(true);
       await createReceiptInnerRoute(values);
       table.setCreatingRow(null);
-      await fetchReceipts();
+      await fetchReceipts(false);
+      setIsSaving(false);
     };
 
   const handleSaveReceipt: MRT_TableOptions<TReceipt>["onEditingRowSave"] =
@@ -203,16 +208,19 @@ const ReceiptsPage = () => {
         setValidationErrors(errors);
         return;
       }
-
+      setIsSaving(true);
       await updateReceiptInnerRoute(values);
       table.setEditingRow(null);
-      await fetchReceipts();
+      await fetchReceipts(false);
+      setIsSaving(false);
     };
 
   const handleDeleteReceipt = async (row: MRT_Row<TReceipt>) => {
     if (window.confirm("Are you sure you want to delete this receipt?")) {
+      setIsSaving(true);
       await deleteReceiptInnerRoute(row.original.check_number);
-      await fetchReceipts();
+      await fetchReceipts(false);
+      setIsSaving(false);
     }
   };
 
@@ -320,6 +328,11 @@ const ReceiptsPage = () => {
         </Button>
       </Box>
     ),
+    state: {
+      isLoading,
+      isSaving,
+      showProgressBars: isLoading || isSaving,
+    },
   });
 
   return (

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -131,14 +131,23 @@ const EmployeePage = () => {
   >({});
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
+  const firstTimeRef = useRef(true);
   useEffect(() => {
-    const fetchEmployees = async () => {
-      const data = await getAllEmployeesInnerRoute();
-      setEmployees(data);
-    };
     fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    if (firstTimeRef.current) setIsLoading(true);
+    const data = await getAllEmployeesInnerRoute();
+    setEmployees(data);
+    if (firstTimeRef.current) {
+      firstTimeRef.current = false;
+      setIsLoading(false);
+    }
+  };
 
   const columns = useMemo<MRT_ColumnDef<TEmployee>[]>(() => {
     const defaultColumnProps = (
@@ -262,6 +271,8 @@ const EmployeePage = () => {
         return;
       }
 
+      setIsSaving(true);
+
       values.id_employee = employees.length
         ? Math.max(...employees.map((e) => e.id_employee)) + 1
         : 1;
@@ -269,7 +280,8 @@ const EmployeePage = () => {
 
       await createEmployeeInnerRoute(values);
       table.setCreatingRow(null);
-      setEmployees(await getAllEmployeesInnerRoute());
+      fetchEmployees();
+      setIsSaving(false);
     };
 
   const handleSaveEmployee: MRT_TableOptions<TEmployee>["onEditingRowSave"] =
@@ -286,17 +298,19 @@ const EmployeePage = () => {
       }
 
       delete values.password;
-
+      setIsSaving(true);
       await updateEmployeeInnerRoute(values.id_employee.toString(), values);
       table.setEditingRow(null);
-      setEmployees(await getAllEmployeesInnerRoute());
+      fetchEmployees();
+      setIsSaving(false);
     };
 
   const handleDeleteEmployee = async (row: MRT_Row<TEmployee>) => {
     if (window.confirm("Ви впевнені щодо видалення?")) {
+      setIsSaving(true);
       await deleteEmployeeInnerRoute(row.original.id_employee.toString());
-
-      setEmployees(await getAllEmployeesInnerRoute());
+      fetchEmployees();
+      setIsSaving(false);
     }
   };
 
@@ -370,7 +384,7 @@ const EmployeePage = () => {
     createDisplayMode: "modal",
     editDisplayMode: "modal",
     enableEditing: true,
-    getRowId: (row) => row.id_employee.toString(),
+    getRowId: (row) => (row.id_employee ? row.id_employee.toString() : ""),
     onCreatingRowSave: handleCreateEmployee,
     onEditingRowSave: handleSaveEmployee,
     renderRowActions: ({ row, table }) => (
@@ -425,6 +439,11 @@ const EmployeePage = () => {
         </Button>
       </Box>
     ),
+    state: {
+      isLoading,
+      isSaving,
+      showProgressBars: isLoading || isSaving,
+    },
   });
 
   return (
