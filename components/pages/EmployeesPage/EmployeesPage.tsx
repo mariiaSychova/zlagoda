@@ -32,6 +32,7 @@ import { encrypt, decrypt } from "@/utils/auth";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 import * as EmailValidator from "email-validator";
+import TableEmployee1 from "./TableEmployee1";
 
 const validateEmployee = (
   employee: Partial<TEmployee>,
@@ -449,6 +450,9 @@ const EmployeePage = () => {
   return (
     <Box sx={{ marginTop: "20px" }}>
       <MaterialReactTable table={table} />
+      <Box sx={{ marginTop: "20px" }}>
+        <TableEmployee1 />
+      </Box>
     </Box>
   );
 };
