@@ -20,5 +20,5 @@ export const parseDate = (formattedDate: string | undefined): string => {
 
 export const formatDateFull = (dateString: string) => {
   if (!dateString) return "";
-  return format(new Date(dateString), "yyyy-MM-dd' 'HH:mm:ss");
+  return format(new Date(dateString), "dd-MM-yyyy' 'HH:mm:ss");
 };
