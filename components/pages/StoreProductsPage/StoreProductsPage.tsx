@@ -443,10 +443,28 @@ const StoreProductsPage = () => {
 
   const handleExportRows = (rows: MRT_Row<TStoreProductWithDescr>[]) => {
     const tableData = sanitizeData(
-      rows.map((row) => Object.values(row.original))
+      rows.map((row) => [
+        row.original.upc,
+        row.original.product_name,
+        row.original.producer,
+        row.original.characteristics,
+        row.original.selling_price,
+        row.original.products_number,
+        row.original.promotional_product ? "Так" : "Ні",
+        row.original.upc_prom,
+      ])
     );
 
-    const tableHeaders = sanitizeData([columns.map((c) => c.header || "")])[0];
+    const tableHeaders = [
+      "UPC",
+      "Назва товару",
+      "Бренд",
+      "Характеристики",
+      "Ціна",
+      "Кількість",
+      "Акційний?",
+      "UPC акц. товару",
+    ];
 
     const docDefinition = {
       pageOrientation: "landscape" as PageOrientation,
@@ -466,7 +484,17 @@ const StoreProductsPage = () => {
         {
           table: {
             headerRows: 1,
-            widths: ["15%", "15%", "10%", "10%", "10%", "10%", "10%"],
+            widths: [
+              "15%",
+              "15%",
+              "10%",
+              "10%",
+              "10%",
+              "10%",
+              "10%",
+              "10%",
+              "10%",
+            ],
             body: [tableHeaders, ...tableData],
           },
           fontSize: 8,
