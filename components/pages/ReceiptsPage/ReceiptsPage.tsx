@@ -55,6 +55,9 @@ import Table4 from "@/components/pages/ReceiptsPage/Table4";
 import Table5 from "@/components/pages/ReceiptsPage/Table5";
 import Table6 from "@/components/pages/ReceiptsPage/Table6";
 import Table7 from "@/components/pages/ReceiptsPage/Table7";
+
+import { useAuth } from "@/context/AuthContext";
+
 const validateReceipt = (
   receipt: Partial<TReceipt>
 ): { [key: string]: string } => {
@@ -83,6 +86,7 @@ const ReceiptsPage = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [selectedTable, setSelectedTable] = useState("");
   const [showTable, setShowTable] = useState(false);
+  const { isAdmin } = useAuth();
 
   const handleTableChange = (event: SelectChangeEvent<string>) => {
     setSelectedTable(event.target.value as string);
@@ -322,6 +326,7 @@ const ReceiptsPage = () => {
       <Box sx={{ display: "flex", gap: "1rem" }}>
         <Tooltip title="Edit">
           <IconButton
+            disabled={isAdmin}
             onClick={() => {
               table.setEditingRow(row);
               setIsEditing(true);
@@ -344,6 +349,7 @@ const ReceiptsPage = () => {
       >
         <Button
           variant="contained"
+          disabled={isAdmin}
           onClick={() => {
             table.setCreatingRow(true);
             setIsEditing(false);
@@ -399,28 +405,28 @@ const ReceiptsPage = () => {
               Отримати інформацію про усі чеки, створені певним касиром за
               певний період часу
             </MenuItem>
-            <MenuItem value="table2">
+            <MenuItem value="table2" disabled={!isAdmin}>
               Отримати інформацію про усі чеки, створені усіма касирами за
               певний період часу
             </MenuItem>
-            <MenuItem value="table3">
+            <MenuItem value="table3" disabled={!isAdmin}>
               Визначити загальну суму проданих товарів з чеків, створених певним
               касиром за певний період часу
             </MenuItem>
-            <MenuItem value="table4">
+            <MenuItem value="table4" disabled={!isAdmin}>
               Визначити загальну суму проданих товарів з чеків, створених усіма
               касирами за певний період часу
             </MenuItem>
-            <MenuItem value="table5">
+            <MenuItem value="table5" disabled={!isAdmin}>
               Визначити загальну кількість одиниць певного товару, проданого за
               певний період часу
             </MenuItem>
-            <MenuItem value="table6">
+            <MenuItem value="table6" disabled={isAdmin}>
               За номером чеку вивести усю інформацію про даний чек, в тому числі
               інформацію про назву, к-сть та ціну товарів, придбаних в даному
               чеку.
             </MenuItem>
-            <MenuItem value="table7">
+            <MenuItem value="table7" disabled={isAdmin}>
               Переглянути список усіх чеків, що створив касир за цей день
             </MenuItem>
           </Select>
