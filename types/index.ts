@@ -17,6 +17,7 @@ export type TProductForDisplay = {
   id_product: number;
   product_name: string;
   producer: string;
+  characteristics: string;
 };
 
 export type TEmployee = {
@@ -100,7 +101,6 @@ export type TStoreProduct_Optional = {
   promotional_product?: boolean;
 };
 
-
 export type TStoreProductForDisplay = {
   upc: string;
   product_name: string;
@@ -108,7 +108,19 @@ export type TStoreProductForDisplay = {
   characteristics: string;
   products_number: number;
   selling_price: number;
-}
+};
+
+export type TStoreProductWithDescr = {
+  upc: string;
+  product_name: string;
+  producer: string;
+  characteristics: string;
+  products_number: number;
+  upc_prom?: string;
+  id_product: number;
+  selling_price: number;
+  promotional_product: boolean;
+};
 
 export type TMariia_1 = {
   card_number: number;

@@ -1,5 +1,5 @@
 "use client";
-import {useEffect, useMemo, useRef, useState} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MaterialReactTable,
   MRT_Cell,
@@ -9,8 +9,12 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 
-import {Box, Button, IconButton, Tooltip} from "@mui/material";
-import {TProductForDisplay, TStoreProduct} from "@/types";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import {
+  TProductForDisplay,
+  TStoreProduct,
+  TStoreProductWithDescr,
+} from "@/types";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -20,23 +24,24 @@ import {
   deleteStoreProductInnerRoute,
   getAllStoreProductsInnerRoute,
   updateStoreProductInnerRoute,
+  getAllStoreProductsWithDescr,
 } from "@/API/store-product";
-import {getAllProductsForDisplayInnerRoute} from "@/API/products";
+import { getAllProductsForDisplayInnerRoute } from "@/API/products";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
-import {PageOrientation} from "pdfmake/interfaces";
-import {formatValue} from "@/utils/formatNumber";
-import {checkIfProductInSell} from "@/API/sale";
+import { PageOrientation } from "pdfmake/interfaces";
+import { formatValue } from "@/utils/formatNumber";
+import { checkIfProductInSell } from "@/API/sale";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const validateStoreProduct = (
-    product: Partial<TStoreProduct>,
-    existingProducts: TStoreProduct[],
-    editing: boolean,
-    isPromotional: boolean,
-    products: TProductForDisplay[]
+  product: Partial<TStoreProductWithDescr>,
+  existingProducts: TStoreProductWithDescr[],
+  editing: boolean,
+  isPromotional: boolean,
+  products: TProductForDisplay[]
 ): { [key: string]: string } => {
   const newErrors: { [key: string]: string } = {};
 
@@ -46,7 +51,7 @@ const validateStoreProduct = (
     newErrors.upc = "UPC має складатися лише з цифр.";
   } else {
     const existingProductWithSameUPC = existingProducts.find(
-        (p) => p.upc === product.upc
+      (p) => p.upc === product.upc
     );
     if (existingProductWithSameUPC && !editing) {
       newErrors.upc = "Товар з таким UPC вже існує.";
@@ -55,42 +60,55 @@ const validateStoreProduct = (
 
   // ID
   if (
-      product.id_product?.toString() === "" ||
-      product.id_product === undefined ||
-      product.id_product === null
+    product.id_product?.toString() === "" ||
+    product.id_product === undefined ||
+    product.id_product === null
   ) {
     newErrors.id_product = "ID товару обов'язкове.";
   } else {
     const existingProductWithSameID = existingProducts.find(
-        (p) => p.id_product === product.id_product
+      (p) => p.id_product === product.id_product
     );
 
     if (existingProductWithSameID) {
-      if ((isPromotional && !editing) && existingProductWithSameID.promotional_product) {
-        newErrors.id_product =
-            "Акційний товар з таким ID вже існує.";
-      } else if ((!isPromotional && !editing) && !existingProductWithSameID.promotional_product) {
+      if (
+        isPromotional &&
+        !editing &&
+        existingProductWithSameID.promotional_product
+      ) {
+        newErrors.id_product = "Акційний товар з таким ID вже існує.";
+      } else if (
+        !isPromotional &&
+        !editing &&
+        !existingProductWithSameID.promotional_product
+      ) {
         newErrors.id_product = "Не акційний товар з таким ID вже існує.";
-      } else if (isPromotional && !existingProducts.find(
+      } else if (
+        isPromotional &&
+        !existingProducts.find(
           (p) => p.id_product === product.id_product && !p.promotional_product
-      )) {
+        )
+      ) {
         newErrors.id_product =
-            "Не можна додати акційний товар без звичайного товару з таким же ID.";
+          "Не можна додати акційний товар без звичайного товару з таким же ID.";
       }
-    } else if (!isPromotional && existingProducts.find(
+    } else if (
+      !isPromotional &&
+      existingProducts.find(
         (p) => p.id_product === product.id_product && p.promotional_product
-    )) {
+      )
+    ) {
       newErrors.id_product =
-          "Звичайний товар з таким ID вже існує як акційний. Видаліть або змініть акційний товар.";
+        "Звичайний товар з таким ID вже існує як акційний. Видаліть або змініть акційний товар.";
     }
   }
 
   // ціна
   if (!isPromotional) {
     if (
-        product.selling_price?.toString() === "" ||
-        product.selling_price === undefined ||
-        product.selling_price === null
+      product.selling_price?.toString() === "" ||
+      product.selling_price === undefined ||
+      product.selling_price === null
     ) {
       newErrors.selling_price = "Ціна обов'язкова.";
     } else if (isNaN(product.selling_price)) {
@@ -102,9 +120,9 @@ const validateStoreProduct = (
 
   // кількість
   if (
-      product.products_number?.toString() === "" ||
-      product.products_number === undefined ||
-      product.products_number === null
+    product.products_number?.toString() === "" ||
+    product.products_number === undefined ||
+    product.products_number === null
   ) {
     newErrors.products_number = "Кількість обов'язкова.";
   } else if (isNaN(product.products_number)) {
@@ -112,13 +130,13 @@ const validateStoreProduct = (
   } else if (product.products_number < 0) {
     newErrors.products_number = "Кількість не може бути від'ємним числом.";
   }
-
   return newErrors;
 };
 
-
 const StoreProductsPage = () => {
-  const [storeProducts, setStoreProducts] = useState<TStoreProduct[]>([]);
+  const [storeProducts, setStoreProducts] = useState<TStoreProductWithDescr[]>(
+    []
+  );
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
@@ -136,7 +154,7 @@ const StoreProductsPage = () => {
 
   const fetchStoreProducts = async () => {
     if (firstTimeRef.current) setIsLoading(true);
-    const data = await getAllStoreProductsInnerRoute();
+    const data = await getAllStoreProductsWithDescr();
     setStoreProducts(data);
     if (firstTimeRef.current) {
       firstTimeRef.current = false;
@@ -152,7 +170,7 @@ const StoreProductsPage = () => {
     fetchProducts();
   }, []);
 
-  const columns = useMemo<MRT_ColumnDef<TStoreProduct>[]>(() => {
+  const columns = useMemo<MRT_ColumnDef<TStoreProductWithDescr>[]>(() => {
     const defaultColumnProps = (
       field: string,
       required: boolean = true,
@@ -208,34 +226,53 @@ const StoreProductsPage = () => {
         },
         editSelectOptions: products.map((product) => ({
           value: product.id_product,
-          text: `ID:${product.id_product} | ${product.product_name} (${product.producer})`,
+          text: `ID:${product.id_product} | ${product.product_name} (${product.producer}) *${product.characteristics}*`,
         })),
-
+      },
+      {
+        accessorKey: "product_name",
+        header: "Назва товару",
+        size: 200,
+        enableEditing: false,
+      },
+      {
+        accessorKey: "producer",
+        header: "Бренд",
+        size: 200,
+        enableEditing: false,
+      },
+      {
+        accessorKey: "characteristics",
+        header: "Характеристики",
+        size: 300,
+        enableEditing: false,
       },
       {
         accessorKey: "selling_price",
         header: "Ціна",
         size: 140,
-
-        Cell: ({ cell }: { cell: MRT_Cell<TStoreProduct> }) => {
+        Cell: ({ cell }: { cell: MRT_Cell<TStoreProductWithDescr> }) => {
           const value = cell.getValue<number | string>();
           return formatValue(value);
         },
-
-        muiEditTextFieldProps: ({ row }: { row: MRT_Row<TStoreProduct> }) => ({
+        muiEditTextFieldProps: ({
+          row,
+        }: {
+          row: MRT_Row<TStoreProductWithDescr>;
+        }) => ({
           required: true,
           error: !!validationErrors?.["selling_price"],
           helperText: validationErrors?.["selling_price"],
           onFocus: () =>
-              setValidationErrors((prev) => ({
-                ...prev,
-                selling_price: undefined,
-              })),
+            setValidationErrors((prev) => ({
+              ...prev,
+              selling_price: undefined,
+            })),
           InputProps: {
             readOnly:
-                row.original.promotional_product ||
-                (isEditing && row.original.promotional_product) ||
-                (!isEditing && isPromotional),
+              row.original.promotional_product ||
+              (isEditing && row.original.promotional_product) ||
+              (!isEditing && isPromotional),
           },
         }),
       },
@@ -248,8 +285,8 @@ const StoreProductsPage = () => {
       {
         accessorKey: "promotional_product",
         enableEditing: false,
+
         header: "Акційний?",
-        ...defaultColumnProps("promotional_product", true),
         size: 120,
         Cell: ({ cell }) => {
           return cell.getValue() ? "Так" : "Ні";
@@ -258,103 +295,131 @@ const StoreProductsPage = () => {
     ];
   }, [validationErrors, isEditing, storeProducts, products, isPromotional]);
 
-  const handleCreateStoreProduct: MRT_TableOptions<TStoreProduct>["onCreatingRowSave"] =
-      async ({ values, table }) => {
-        const errors = validateStoreProduct(
-            values,
-            storeProducts,
-            isEditing,
-            isPromotional,
-            products
-        );
+  const handleCreateStoreProduct: MRT_TableOptions<TStoreProductWithDescr>["onCreatingRowSave"] =
+    async ({ values, table }) => {
+      const errors = validateStoreProduct(
+        values,
+        storeProducts,
+        isEditing,
+        isPromotional,
+        products
+      );
 
-        if (Object.keys(errors).length) {
-          setValidationErrors(errors);
-          return;
-        }
+      if (Object.keys(errors).length) {
+        setValidationErrors(errors);
+        return;
+      }
 
-        try {
-          setIsSaving(true);
-          values.promotional_product = isPromotional;
-          if (isPromotional) {
-            const nonPromotionalProduct = storeProducts.find(
-                (product) =>
-                    product.id_product === values.id_product &&
-                    !product.promotional_product
+      try {
+        setIsSaving(true);
+        values.promotional_product = isPromotional;
+
+        const storeProductData: TStoreProduct = {
+          upc: values.upc,
+          id_product: values.id_product,
+          products_number: values.products_number,
+          upc_prom: values.upc_prom,
+          selling_price: values.selling_price,
+          promotional_product: values.promotional_product,
+        };
+        if (isPromotional) {
+          const nonPromotionalProduct = storeProducts.find(
+            (product) =>
+              product.id_product === values.id_product &&
+              !product.promotional_product
+          );
+          if (nonPromotionalProduct) {
+            const nonPromotionalProductData: TStoreProduct = {
+              upc: nonPromotionalProduct.upc,
+              id_product: nonPromotionalProduct.id_product,
+              products_number: nonPromotionalProduct.products_number,
+              upc_prom: nonPromotionalProduct.upc_prom,
+              selling_price: nonPromotionalProduct.selling_price,
+              promotional_product: nonPromotionalProduct.promotional_product,
+            };
+            storeProductData.selling_price =
+              nonPromotionalProductData.selling_price * 0.8;
+            await createStoreProductInnerRoute(storeProductData);
+            nonPromotionalProductData.upc_prom = storeProductData.upc;
+
+            await updateStoreProductInnerRoute(
+              nonPromotionalProductData.upc,
+              nonPromotionalProductData
             );
-
-            if (nonPromotionalProduct) {
-              values.selling_price = nonPromotionalProduct.selling_price * 0.8;
-              await createStoreProductInnerRoute(values);
-              nonPromotionalProduct.upc_prom = values.upc;
-              await updateStoreProductInnerRoute(
-                  nonPromotionalProduct.upc,
-                  nonPromotionalProduct
-              );
-            }
-          } else {
-            await createStoreProductInnerRoute(values);
           }
-
-          await fetchStoreProducts();
-
-          table.setCreatingRow(null);
-          setIsSaving(false);
-          setIsPromotional(false);
-        } catch (error) {
-          console.error("Error creating store product:", error);
-          setIsSaving(false);
-        }
-      };
-
-  const handleSaveRow: MRT_TableOptions<TStoreProduct>["onEditingRowSave"] =
-      async ({ row, values }) => {
-        const errors = validateStoreProduct(
-            values,
-            storeProducts,
-            isEditing,
-            isPromotional,
-            products
-        );
-
-        if (Object.keys(errors).length) {
-          setValidationErrors(errors);
-          return;
+        } else {
+          await createStoreProductInnerRoute(storeProductData);
         }
 
-        try {
-          setIsSaving(true);
-          if (row.original.promotional_product) {
-            const nonPromotionalProduct = storeProducts.find(
-                (product) => product.upc_prom === row.original.upc
+        await fetchStoreProducts();
+
+        table.setCreatingRow(null);
+        setIsSaving(false);
+        setIsPromotional(false);
+      } catch (error) {
+        console.error("Error creating store product:", error);
+        setIsSaving(false);
+      }
+    };
+
+  const handleSaveRow: MRT_TableOptions<TStoreProductWithDescr>["onEditingRowSave"] =
+    async ({ row, values }) => {
+      const errors = validateStoreProduct(
+        values,
+        storeProducts,
+        isEditing,
+        isPromotional,
+        products
+      );
+
+      if (Object.keys(errors).length) {
+        setValidationErrors(errors);
+        return;
+      }
+
+      try {
+        setIsSaving(true);
+
+        const storeProductData: TStoreProduct = {
+          upc: values.upc,
+          id_product: values.id_product,
+          products_number: values.products_number,
+          upc_prom: values.upc_prom,
+          selling_price: values.selling_price,
+          promotional_product: values.promotional_product,
+        };
+
+        if (row.original.promotional_product) {
+          const nonPromotionalProduct = storeProducts.find(
+            (product) => product.upc_prom === row.original.upc
+          );
+          if (nonPromotionalProduct) {
+            nonPromotionalProduct.upc_prom = storeProductData.upc;
+            await updateStoreProductInnerRoute(
+              nonPromotionalProduct.upc,
+              nonPromotionalProduct
             );
-            if (nonPromotionalProduct) {
-              nonPromotionalProduct.upc_prom = values.upc;
-              await updateStoreProductInnerRoute(
-                  nonPromotionalProduct.upc,
-                  nonPromotionalProduct
-              );
-            }
           }
-          await updateStoreProductInnerRoute(row.original.upc, values);
-          await fetchStoreProducts();
-
-          table.setEditingRow(null);
-          setIsSaving(false);
-          setIsEditing(false);
-        } catch (error) {
-          console.error("Error saving row:", error);
-          setIsSaving(false);
         }
-      };
+        await updateStoreProductInnerRoute(row.original.upc, storeProductData);
+        await fetchStoreProducts();
 
-  const handleCancelRow: MRT_TableOptions<TStoreProduct>["onEditingRowCancel"] =
+        table.setEditingRow(null);
+        setIsSaving(false);
+        setIsEditing(false);
+      } catch (error) {
+        console.error("Error saving row:", error);
+        setIsSaving(false);
+      }
+    };
+
+  const handleCancelRow: MRT_TableOptions<TStoreProductWithDescr>["onEditingRowCancel"] =
     () => {
       setValidationErrors({});
       setIsEditing(false);
     };
 
-  const handleDeleteRow = async (row: MRT_Row<TStoreProduct>) => {
+  const handleDeleteRow = async (row: MRT_Row<TStoreProductWithDescr>) => {
     if (!row.original.promotional_product && row.original.upc_prom) {
       alert(
         "Не можна видалити звичайний товар, якщо існує акційний товар, пов'язаний з ним."
@@ -362,7 +427,6 @@ const StoreProductsPage = () => {
       return;
     }
     const isProductInSell = await checkIfProductInSell(row.original.upc);
-    console.log(isProductInSell);
     if (isProductInSell) {
       alert("Не можна видалити цей товар, оскільки він входить до продажу.");
       return;
@@ -377,7 +441,7 @@ const StoreProductsPage = () => {
     }
   };
 
-  const handleExportRows = (rows: MRT_Row<TStoreProduct>[]) => {
+  const handleExportRows = (rows: MRT_Row<TStoreProductWithDescr>[]) => {
     const tableData = sanitizeData(
       rows.map((row) => Object.values(row.original))
     );
@@ -425,7 +489,7 @@ const StoreProductsPage = () => {
     });
   };
 
-  const table = useMaterialReactTable({
+  const table = useMaterialReactTable<TStoreProductWithDescr>({
     columns: columns,
     data: storeProducts,
     createDisplayMode: "modal",

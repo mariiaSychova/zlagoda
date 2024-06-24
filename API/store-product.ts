@@ -3,6 +3,7 @@ import {
   TStoreProduct,
   TStoreProduct_Optional,
   TStoreProductForDisplay,
+  TStoreProductWithDescr,
 } from "@/types";
 
 export const getAllStoreProductsInnerRoute = async (): Promise<
@@ -46,4 +47,11 @@ export const updateStoreProductQuantity = async (
     upc,
     quantity: newQuantity,
   });
+};
+
+export const getAllStoreProductsWithDescr = async (): Promise<
+  TStoreProductWithDescr[]
+> => {
+  const response = await axios.get("/api/store-product/get-all-with-descr");
+  return response.data;
 };
