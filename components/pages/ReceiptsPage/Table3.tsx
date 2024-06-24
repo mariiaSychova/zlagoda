@@ -8,33 +8,18 @@ import {
   MenuItem,
   Button,
   TextField,
+  Typography,
 } from "@mui/material";
-import {
-  MaterialReactTable,
-  MRT_ColumnDef,
-  useMaterialReactTable,
-} from "material-react-table";
+import axios from "axios";
 import { getAllCashiersForDisplay } from "@/API/employee";
 import { TEmployeeForDisplay } from "@/types";
-import axios from "axios";
-import { formatDate } from "@/utils/formatDate";
-interface Receipt {
-  check_number: string;
-  print_date: string;
-  sum_total: number;
-  vat: number;
-  product_name: string;
-  product_number: number;
-  selling_price: number;
-}
 
-const Table1 = () => {
+const Table3 = () => {
   const [cashiers, setCashiers] = useState<TEmployeeForDisplay[]>([]);
   const [selectedCashier, setSelectedCashier] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [showTable, setShowTable] = useState(false);
+  const [totalSales, setTotalSales] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchCashiers = async () => {
@@ -44,34 +29,14 @@ const Table1 = () => {
     fetchCashiers();
   }, []);
 
-  const fetchReceipts = async () => {
+  const fetchTotalSales = async () => {
     if (selectedCashier && startDate && endDate) {
-      const data = await getReceipts(selectedCashier, startDate, endDate);
+      const data = await getTotalSales(selectedCashier, startDate, endDate);
       if (data) {
-        setReceipts(data);
-        setShowTable(true);
+        setTotalSales(data.total_sales);
       }
     }
   };
-
-  const columns: MRT_ColumnDef<Receipt>[] = [
-    { header: "Номер чека", accessorKey: "check_number" },
-    {
-      header: "Дата друку",
-      accessorKey: "print_date",
-      Cell: ({ cell }) => formatDate(cell.getValue<string>()),
-    },
-    { header: "Загальна сума", accessorKey: "sum_total" },
-    { header: "ПДВ", accessorKey: "vat" },
-    { header: "Назва товару", accessorKey: "product_name" },
-    { header: "Кількість товару", accessorKey: "product_number" },
-    { header: "Ціна продажу", accessorKey: "selling_price" },
-  ];
-
-  const table = useMaterialReactTable({
-    columns: columns,
-    data: receipts,
-  });
 
   return (
     <Box sx={{ padding: 4 }}>
@@ -109,23 +74,27 @@ const Table1 = () => {
           onChange={(e) => setEndDate(e.target.value)}
         />
 
-        <Button variant="contained" onClick={fetchReceipts}>
+        <Button variant="contained" onClick={fetchTotalSales}>
           Отримати дані
         </Button>
       </Box>
 
-      {showTable && <MaterialReactTable table={table} />}
+      {totalSales !== null && (
+        <Typography variant="h6">
+          Загальна сума продажів: {totalSales} грн
+        </Typography>
+      )}
     </Box>
   );
 };
 
-const getReceipts = async (
+const getTotalSales = async (
   id_employee: string,
   startDate: string,
   endDate: string
-): Promise<Receipt[]> => {
+): Promise<{ total_sales: number }> => {
   try {
-    const response = await axios.post("/api/receipt/get-receipts-for-cashier", {
+    const response = await axios.post("/api/receipt/get-total-sales", {
       id_employee,
       startDate,
       endDate,
@@ -133,8 +102,8 @@ const getReceipts = async (
     return response.data;
   } catch (error) {
     console.error("Помилка виконання запиту", error);
-    return [];
+    return { total_sales: 0 };
   }
 };
 
-export default Table1;
+export default Table3;

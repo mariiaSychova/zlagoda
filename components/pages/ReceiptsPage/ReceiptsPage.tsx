@@ -49,7 +49,10 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 import SalesTable from "./SalesTable";
 import Table1 from "@/components/pages/ReceiptsPage/Table1";
-
+import Table2 from "@/components/pages/ReceiptsPage/Table2";
+import Table3 from "@/components/pages/ReceiptsPage/Table3";
+import Table4 from "@/components/pages/ReceiptsPage/Table4";
+import Table5 from "@/components/pages/ReceiptsPage/Table5";
 const validateReceipt = (
   receipt: Partial<TReceipt>
 ): { [key: string]: string } => {
@@ -390,8 +393,26 @@ const ReceiptsPage = () => {
             onChange={handleTableChange}
             label="Виберіть запит"
           >
-            <MenuItem value="table1">Таблиця 1</MenuItem>
-            <MenuItem value="table2">Таблиця 2</MenuItem>
+            <MenuItem value="table1">
+              Отримати інформацію про усі чеки, створені певним касиром за
+              певний період часу
+            </MenuItem>
+            <MenuItem value="table2">
+              Отримати інформацію про усі чеки, створені усіма касирами за
+              певний період часу
+            </MenuItem>
+            <MenuItem value="table3">
+              Визначити загальну суму проданих товарів з чеків, створених певним
+              касиром за певний період часу
+            </MenuItem>
+            <MenuItem value="table4">
+              Визначити загальну суму проданих товарів з чеків, створених усіма
+              касирами за певний період часу
+            </MenuItem>
+            <MenuItem value="table5">
+              Визначити загальну кількість одиниць певного товару, проданого за
+              певний період часу
+            </MenuItem>
           </Select>
         </FormControl>
         <Button variant="contained" onClick={handleButtonClick}>
@@ -400,7 +421,10 @@ const ReceiptsPage = () => {
       </Box>
       <Box sx={{ marginTop: "20px", paddingBottom: "100px", width: "100%" }}>
         {showTable && selectedTable === "table1" && <Table1 />}
-        {showTable && selectedTable === "table2" && <Box />}
+        {showTable && selectedTable === "table2" && <Table2 />}
+        {showTable && selectedTable === "table3" && <Table3 />}
+        {showTable && selectedTable === "table4" && <Table4 />}
+        {showTable && selectedTable === "table5" && <Table5 />}
       </Box>
     </Box>
   );
