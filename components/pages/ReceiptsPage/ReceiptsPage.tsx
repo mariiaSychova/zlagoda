@@ -53,6 +53,8 @@ import Table2 from "@/components/pages/ReceiptsPage/Table2";
 import Table3 from "@/components/pages/ReceiptsPage/Table3";
 import Table4 from "@/components/pages/ReceiptsPage/Table4";
 import Table5 from "@/components/pages/ReceiptsPage/Table5";
+import Table6 from "@/components/pages/ReceiptsPage/Table6";
+import Table7 from "@/components/pages/ReceiptsPage/Table7";
 const validateReceipt = (
   receipt: Partial<TReceipt>
 ): { [key: string]: string } => {
@@ -413,6 +415,14 @@ const ReceiptsPage = () => {
               Визначити загальну кількість одиниць певного товару, проданого за
               певний період часу
             </MenuItem>
+            <MenuItem value="table6">
+              За номером чеку вивести усю інформацію про даний чек, в тому числі
+              інформацію про назву, к-сть та ціну товарів, придбаних в даному
+              чеку.
+            </MenuItem>
+            <MenuItem value="table7">
+              Переглянути список усіх чеків, що створив касир за цей день
+            </MenuItem>
           </Select>
         </FormControl>
         <Button variant="contained" onClick={handleButtonClick}>
@@ -425,6 +435,8 @@ const ReceiptsPage = () => {
         {showTable && selectedTable === "table3" && <Table3 />}
         {showTable && selectedTable === "table4" && <Table4 />}
         {showTable && selectedTable === "table5" && <Table5 />}
+        {showTable && selectedTable === "table6" && <Table6 />}
+        {showTable && selectedTable === "table7" && <Table7 />}
       </Box>
     </Box>
   );
