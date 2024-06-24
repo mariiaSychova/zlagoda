@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -8,7 +8,17 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 
-import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Tooltip,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -38,6 +48,7 @@ import { PageOrientation } from "pdfmake/interfaces";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 import SalesTable from "./SalesTable";
+import Table1 from "@/components/pages/ReceiptsPage/Table1";
 
 const validateReceipt = (
   receipt: Partial<TReceipt>
@@ -65,6 +76,18 @@ const ReceiptsPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [selectedTable, setSelectedTable] = useState("");
+  const [showTable, setShowTable] = useState(false);
+
+  const handleTableChange = (event: SelectChangeEvent<string>) => {
+    setSelectedTable(event.target.value as string);
+    setShowTable(false);
+  };
+
+  const handleButtonClick = () => {
+    console.log("clicked");
+    setShowTable(true);
+  };
 
   const fetchReceipts = async (updating: boolean) => {
     if (updating) setIsLoading(true);
@@ -341,15 +364,45 @@ const ReceiptsPage = () => {
   });
 
   return (
-    <Box sx={{ marginTop: "20px"}}>
-      <MaterialReactTable table={ReceiptTable} />
-      {selectedCheckNumber && (
-        <SalesTable
-          selectedCheckNumber={selectedCheckNumber}
-          onUpdateReceipts={fetchReceipts}
-        />
-      )}
+    <Box>
+      <Box sx={{ marginTop: "20px" }}>
+        <MaterialReactTable table={ReceiptTable} />
+        {selectedCheckNumber && (
+          <SalesTable
+            selectedCheckNumber={selectedCheckNumber}
+            onUpdateReceipts={fetchReceipts}
+          />
+        )}
       </Box>
+      <Box
+        sx={{
+          marginTop: "40px",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <FormControl fullWidth>
+          <InputLabel id="user-select-label">Виберіть запит</InputLabel>
+          <Select
+            labelId="table-select-label"
+            value={selectedTable}
+            onChange={handleTableChange}
+            label="Виберіть запит"
+          >
+            <MenuItem value="table1">Таблиця 1</MenuItem>
+            <MenuItem value="table2">Таблиця 2</MenuItem>
+          </Select>
+        </FormControl>
+        <Button variant="contained" onClick={handleButtonClick}>
+          Отримати дані
+        </Button>
+      </Box>
+      <Box sx={{ marginTop: "20px", paddingBottom: "100px", width: "100%" }}>
+        {showTable && selectedTable === "table1" && <Table1 />}
+        {showTable && selectedTable === "table2" && <Box />}
+      </Box>
+    </Box>
   );
 };
 
