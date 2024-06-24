@@ -20,8 +20,9 @@ export async function POST(req: Request) {
     sum_total: 0,
     vat: 0,
   };
-
-  await executeDBQuery(`
+  let query;
+  if (receipt.card_number){
+    query = `
     INSERT INTO public.receipt 
     (check_number, id_employee, card_number, print_date, sum_total, vat)
     VALUES 
@@ -31,7 +32,20 @@ export async function POST(req: Request) {
      '${receipt.print_date}',
      ${receipt.sum_total},
      ${receipt.vat})
-  `);
+  `
+  }else{
+    query = `
+    INSERT INTO public.receipt 
+    (check_number, id_employee, print_date, sum_total, vat)
+    VALUES 
+    ('${receipt.check_number}',
+     '${receipt.id_employee}',
+     '${receipt.print_date}',
+     ${receipt.sum_total},
+     ${receipt.vat})
+  `
+  }
+  await executeDBQuery(query);
 
   return Response.json({ message: "Receipt created successfully" });
 }

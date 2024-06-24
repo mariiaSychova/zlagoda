@@ -64,6 +64,7 @@ const ReceiptsPage = () => {
   );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const fetchReceipts = async (updating: boolean) => {
     if (updating) setIsLoading(true);
@@ -145,6 +146,7 @@ const ReceiptsPage = () => {
         accessorKey: "card_number",
         header: "Номер картки клієнта",
         size: 160,
+        enableEditing: !isEditing,
         muiEditTextFieldProps: {
           select: true,
         },
@@ -220,6 +222,7 @@ const ReceiptsPage = () => {
       setIsSaving(true);
       await deleteReceiptInnerRoute(row.original.check_number);
       await fetchReceipts(false);
+      setSelectedCheckNumber(null);
       setIsSaving(false);
     }
   };
@@ -293,6 +296,7 @@ const ReceiptsPage = () => {
           <IconButton
             onClick={() => {
               table.setEditingRow(row);
+              setIsEditing(true);
               setValidationErrors({});
             }}
           >
@@ -314,6 +318,7 @@ const ReceiptsPage = () => {
           variant="contained"
           onClick={() => {
             table.setCreatingRow(true);
+            setIsEditing(false);
             setValidationErrors({});
           }}
         >

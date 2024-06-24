@@ -84,13 +84,12 @@ const SalesTable: React.FC<SalesTableProps> = ({
   }, [selectedCheckNumber]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      const data = await getAllStoreProductsForDisplayInnerRoute();
-      setProducts(data);
-    };
     fetchProducts();
   }, []);
-
+  const fetchProducts = async () => {
+    const data = await getAllStoreProductsForDisplayInnerRoute();
+    setProducts(data);
+  };
   const updateReceiptAndProduct = async (
     checkNumber: string,
     sell: TSell,
@@ -98,7 +97,11 @@ const SalesTable: React.FC<SalesTableProps> = ({
   ) => {
     setIsSaving(true);
     const receipt: TReceipt = await getReceiptByNumInnerRoute(checkNumber);
-    const product = products.find((p) => p.upc === sell.upc);
+
+    const updatedProducts = await getAllStoreProductsForDisplayInnerRoute();
+    setProducts(updatedProducts);
+
+    const product = updatedProducts.find((p) => p.upc === sell.upc);
 
     if (!product) {
       setIsSaving(false);
@@ -110,7 +113,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
       sell.product_number > product.products_number
     ) {
       setIsSaving(false);
-      throw new Error("Insufficient product quantity in store");
+      throw new Error(`Недостатня кількість товару в магазині ${product.products_number}`);
     }
     const customerDiscountResponce = receipt.card_number
       ? await getCustomerDiscountByNumInnerRoute(receipt.card_number)
@@ -119,34 +122,77 @@ const SalesTable: React.FC<SalesTableProps> = ({
     const customerDiscount = parseFloat(customerDiscountResponce.percent) || 0;
     const receiptTotal = parseFloat(receipt.sum_total.toString());
     const sellingPrice = parseFloat(sell.selling_price.toString());
-    const productNumber = parseInt(sell.product_number.toString(), 10) || 0;
+    const newProductNumber = parseInt(sell.product_number.toString(), 10) || 0;
 
-    if (operation === "add" || operation === "update") {
+    if (operation === "add") {
       const newTotal =
         Math.round(
           (receiptTotal +
-            sellingPrice * productNumber * (1 - customerDiscount / 100)) *
+            sellingPrice * newProductNumber * (1 - customerDiscount / 100)) *
             10000
         ) / 10000;
       const newVat = Math.round(newTotal * 0.2 * 10000) / 10000;
+
+      await updateReceiptInnerRoute({
+        ...receipt,
+        sum_total: newTotal,
+        vat: newVat,
+      });
+      await updateStoreProductQuantity(
+        sell.upc,
+        product.products_number - newProductNumber
+      );
+
+    }
+
+    if (operation === "update"){
+      const existingSell = sells.find(
+          (s) => s.upc === sell.upc && s.check_number === checkNumber
+      );
+      if (!existingSell) {
+        setIsSaving(false);
+        throw new Error("Existing sale not found");
+      }
+
+      const existingProductNumber = parseInt(existingSell.product_number.toString(), 10);
+      const productNumberDifference = newProductNumber - existingProductNumber;
+
+      if (productNumberDifference > 0 && productNumberDifference > product.products_number) {
+        throw new Error(
+            `Недостатня кількість товару в магазині ${product.products_number}`
+        );
+      }
+
+      const newTotal =
+          Math.round(
+              (receiptTotal +
+                  sellingPrice * productNumberDifference * (1 - customerDiscount / 100)) *
+              10000
+          ) / 10000;
+      const newVat = Math.round(newTotal * 0.2 * 10000) / 10000;
+
       await updateReceiptInnerRoute({
         ...receipt,
         sum_total: newTotal,
         vat: newVat,
       });
 
+      const updatedProductNumber = product.products_number - productNumberDifference;
+      // console.log("product.products_number",product.products_number);
+      // console.log("productNumberDifference", productNumberDifference);
+      // console.log("Updated product number", updatedProductNumber);
+
       await updateStoreProductQuantity(
-        sell.upc,
-        product.products_number - productNumber
+          sell.upc,
+          updatedProductNumber
       );
-      setIsSaving(false);
     }
 
     if (operation === "delete") {
       const newTotal =
         Math.round(
           (receiptTotal -
-            sellingPrice * productNumber * (1 - customerDiscount / 100)) *
+            sellingPrice * newProductNumber * (1 - customerDiscount / 100)) *
             10000
         ) / 10000;
       const newVat = Math.round(newTotal * 0.2 * 10000) / 10000;
@@ -156,11 +202,8 @@ const SalesTable: React.FC<SalesTableProps> = ({
         sum_total: newTotal,
         vat: newVat,
       });
-      await updateStoreProductQuantity(
-        sell.upc,
-        product.products_number + productNumber
-      );
     }
+    setIsSaving(false);
   };
 
   const sellColumns = useMemo<MRT_ColumnDef<TSell>[]>(() => {
@@ -283,6 +326,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
     try {
       setIsSaving(true);
       await updateReceiptAndProduct(selectedCheckNumber, values, "update");
+      values.check_number = selectedCheckNumber;
       await updateSaleInnerRoute(values);
       table.setEditingRow(null);
       await fetchSales(false);

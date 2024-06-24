@@ -3,7 +3,6 @@ import { TSell } from "@/types";
 
 export async function PUT(req: Request) {
   const data = (await req.json()) as TSell;
-
   await executeDBQuery(`
     UPDATE public.sale 
     SET
